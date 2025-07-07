@@ -161,7 +161,8 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
+        model: 'qwen/qwq-32b:free',
+        
         messages: [{ role: 'user', content: `Summarize the following content in ${length}, using a ${tone} tone:\n\n${threadText}` }],
         max_tokens: 300,
         temperature: 1.0
