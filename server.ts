@@ -9,8 +9,28 @@ import { TwitterApi } from 'twitter-api-v2';
 
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = {
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+  TWITTER_BEARER_TOKEN: process.env.TWITTER_BEARER_TOKEN
+};
+
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([_, value]) => !value)
+  .map(([key, _]) => key);
+
+if (missingVars.length > 0) {
+  console.error('❌ Missing required environment variables:');
+  missingVars.forEach(varName => {
+    console.error(`   - ${varName}`);
+  });
+  console.error('\n📝 Please check your .env file and ensure all required variables are set.');
+  console.error('💡 See .env/.env.example for reference.');
+  process.exit(1);
+}
+
 // initialize Twitter client with bearer token
-const twitterClient = new TwitterApi(process.env.TWITTER_BEARER_TOKEN!);
+const twitterClient = new TwitterApi(requiredEnvVars.TWITTER_BEARER_TOKEN!);
 
 const app = express();
 // default port
@@ -126,12 +146,7 @@ app.get('/', (_req: Request, res: Response): void => {
 // summarization endpoint
 app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
   const { threadUrl, rawText, length, tone } = req.body as { threadUrl?: string; rawText?: string; length: string; tone: string };
-  const openKey = process.env.OPENROUTER_API_KEY;
-  const twitterToken = process.env.TWITTER_BEARER_TOKEN;
-  if (!openKey || !twitterToken) {
-    res.status(500).json({ error: 'Missing OPENROUTER_API_KEY or TWITTER_BEARER_TOKEN in env.' });
-    return;
-  }
+  
   try {
     let threadText: string;
     if (threadUrl && /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(threadUrl)) {
@@ -144,7 +159,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     }
     const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${openKey}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
         messages: [{ role: 'user', content: `Summarize the following content in ${length}, using a ${tone} tone:\n\n${threadText}` }],
