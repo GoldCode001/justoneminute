@@ -39,6 +39,23 @@ function extractTwitterUrls(text: string): string[] {
   return text.match(twitterUrlRegex) || [];
 }
 
+// Helper function to fetch content from multiple Twitter URLs
+async function fetchContentFromTwitterUrls(urls: string[]): Promise<string> {
+  const contents: string[] = [];
+  
+  for (const url of urls) {
+    try {
+      const content = await fetchThreadTextFromTwitter(url);
+      contents.push(`--- Content from ${url} ---\n${content}`);
+    } catch (error) {
+      console.error(`Failed to fetch content from ${url}:`, error);
+      contents.push(`--- Failed to fetch content from ${url} ---`);
+    }
+  }
+  
+  return contents.join('\n\n');
+}
+
 // Helper function to detect if text contains Twitter-like content
 function detectTwitterContent(text: string): boolean {
   const twitterIndicators = [
@@ -85,11 +102,14 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       // Check if the raw text contains Twitter URLs or looks like Twitter content
       const twitterUrls = extractTwitterUrls(rawText);
       if (twitterUrls.length > 0) {
+        // Fetch actual content from Twitter URLs
+        const fetchedContent = await fetchContentFromTwitterUrls(twitterUrls);
+        threadText = `${rawText}\n\n--- FETCHED TWITTER CONTENT ---\n${fetchedContent}`;
         isTwitterContent = true;
       } else {
         isTwitterContent = detectTwitterContent(rawText);
+        threadText = rawText;
       }
-      threadText = rawText;
     } else {
       res.status(400).json({ error: 'No thread link or text provided.' });
       return;
