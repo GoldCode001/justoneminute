@@ -65,7 +65,7 @@ exports.handler = async (event, context) => {
         'X-Title': 'Just One Minute'
       },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-chat-v3-0324:free',
+        model: 'deepseek/deepseek-chat-v3-0324',
         messages: [{ 
           role: 'user', 
           content: prompt

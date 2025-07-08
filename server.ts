@@ -65,7 +65,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-chat-v3-0324:free',
+        model: 'deepseek/deepseek-chat-v3-0324',
         messages: [{ 
           role: 'user', 
           content: getPromptForTone(tone, length, threadText)
