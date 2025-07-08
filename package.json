@@ -5,10 +5,10 @@
   "main": "dist/server.js",
   "type": "commonjs",
   "scripts": {
-    "build": "npx tsc",
+    "prebuild": "npm install vite --no-save",
+    "build": "npx vite build",
     "start": "node dist/server.js",
-    "dev": "npx tsc && node dist/server.js",
-    "clean": "rm -rf dist"
+    "dev": "npx tsc && node dist/server.js"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
@@ -22,12 +22,5 @@
     "@types/node-fetch": "^2.6.7",
     "typescript": "^5.2.2"
   },
-
-  "scripts": {
-    "prebuild": "npm install vite --no-save",
-    "build": "npx vite build",
-    "start": "node dist/server.js",
-    "dev": "npx tsc && node dist/server.js"
-  }
 }
 
