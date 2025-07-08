@@ -308,29 +308,29 @@ exports.handler = async (event, context) => {
 };
 
 function getPromptForTone(tone, length, content, isTwitterContent = false) {
-  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary. Do not ask questions or request clarification. Keep it concise and direct. IMPORTANT: Preserve all key terms, technical concepts, names, numbers, and important keywords from the original content. Do not omit crucial details or terminology.";
+  const baseInstruction = "Write like a real human who actually understands this stuff. No corporate speak, no robotic responses. Be conversational, relatable, and authentic. Use natural language, contractions, and explain things like you're talking to a friend. CRITICAL: Keep all important keywords, names, technical terms, numbers, and key details from the original - but explain them in human terms when needed. Never ask questions or request clarification.";
   
   const twitterContext = isTwitterContent ? 
-    "This appears to be Twitter/X content (thread, posts, or tweets). Extract and summarize the key points from the social media content. Maintain all important keywords, names, technical terms, and specific details mentioned. " : 
+    "This is Twitter/X content. Pull out the main points and make them digestible. Keep all the important stuff - names, numbers, technical terms - but make it actually readable. " : 
     "";
   
   switch (tone) {
     case 'shitpost':
-      return `${twitterContext}Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. CRITICAL: Keep all important keywords, names, technical terms, and key concepts from the original. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Turn this into a ${length} shitpost that actually slaps. Use internet slang, memes, and make it funny as hell while still hitting the main points. Don't be cringe about it - make it genuinely entertaining. Keep all the important names, numbers, and technical stuff but make it memeable. ${baseInstruction}\n\n${content}`;
     
     case 'infographics':
-      return `${twitterContext}Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. CRITICAL: Include all important keywords, numbers, names, and technical terms from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Make this into ${length} that would work perfectly in an infographic. Think clean sections, bullet points, key stats, and visual structure. Use emojis naturally (not overdoing it). Keep all the important numbers, names, and technical details but organize them so they're easy to scan and understand. ${baseInstruction}\n\n${content}`;
     
     case 'simple':
-      return `${twitterContext}Summarize this content in ${length} using simple, easy-to-understand language. CRITICAL: Even when simplifying, preserve all important keywords, names, technical terms, numbers, and key concepts from the original. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Break this down into ${length} that anyone can understand. Think "explain it like I'm 5" but not condescending. Use analogies, simple examples, and everyday language. Keep all the important names, numbers, and technical stuff but explain what they actually mean in real terms. ${baseInstruction}\n\n${content}`;
     
     case 'professional':
-      return `${twitterContext}Summarize this content in ${length} using a professional, business-appropriate tone. CRITICAL: Maintain all important keywords, technical terminology, names, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Write this as ${length} in a professional tone that doesn't sound like corporate BS. Be polished but still human - like how you'd explain it in a good meeting or email to colleagues. Keep all the technical terms, names, numbers, and key details but make it business-appropriate without being stuffy. ${baseInstruction}\n\n${content}`;
     
     case 'conversational':
-      return `${twitterContext}Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. CRITICAL: Keep all important keywords, names, technical terms, and key details from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Explain this in ${length} like you're talking to a friend over coffee. Be natural, use contractions, throw in some personality. Make it feel like a real conversation - not a presentation. Keep all the important names, numbers, and technical details but explain them in a way that feels genuine and relatable. ${baseInstruction}\n\n${content}`;
     
     default:
-      return `${twitterContext}Summarize this content in ${length} using a ${tone} tone. CRITICAL: Preserve all important keywords, names, technical terms, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Write this as ${length} with a ${tone} tone that feels authentic and human. Don't sound like a robot or use corporate speak. Keep all the important keywords, names, technical terms, numbers, and key details from the original but make it actually engaging to read. ${baseInstruction}\n\n${content}`;
   }
 }
