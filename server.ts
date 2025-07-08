@@ -187,45 +187,71 @@ function extractThreadId(url: string): string {
 // fetch full thread text by conversation_id
 async function fetchThreadTextFromTwitter(url: string): Promise<string> {
   const threadId = extractThreadId(url);
-  const response = await twitterClient.v2.search(`conversation_id:${threadId}`, {
-    'tweet.fields': ['text', 'created_at'],
-    max_results: 100,
-    sort_order: 'recency'
-  });
-  const tweets = response.data?.data;
-  if (!tweets || tweets.length === 0) throw new Error('Unable to fetch thread content');
-  const sorted = tweets.sort((a, b) =>
-    new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
-  );
-  return sorted.map(t => t.text).join('\n\n');
+  
+  try {
+    // First try to get the original tweet
+    const originalTweet = await twitterClient.v2.singleTweet(threadId, {
+      'tweet.fields': ['text', 'created_at', 'conversation_id', 'author_id'],
+      'user.fields': ['username', 'name']
+    });
+    
+    if (!originalTweet.data) {
+      throw new Error('Unable to fetch original tweet');
+    }
+    
+    // Then search for the full conversation/thread
+    const response = await twitterClient.v2.search(`conversation_id:${threadId}`, {
+      'tweet.fields': ['text', 'created_at', 'author_id'],
+      'user.fields': ['username', 'name'],
+      max_results: 100,
+      sort_order: 'recency'
+    });
+    
+    const tweets = response.data?.data || [];
+    
+    // If we only have the original tweet, return it
+    if (tweets.length === 0) {
+      return originalTweet.data.text;
+    }
+    
+    // Sort tweets chronologically and combine
+    const sorted = tweets.sort((a, b) =>
+      new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
+    );
+    
+    return sorted.map((t, index) => `${index + 1}. ${t.text}`).join('\n\n');
+  } catch (error) {
+    console.error('Error fetching Twitter thread:', error);
+    throw new Error('Unable to fetch thread content. Please check the URL and try again.');
+  }
 }
 
 // generate appropriate prompt based on tone
 function getPromptForTone(tone: string, length: string, content: string, isTwitterContent: boolean = false): string {
-  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary. Do not ask questions or request clarification. Keep it concise and direct.";
+  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary. Do not ask questions or request clarification. Keep it concise and direct. IMPORTANT: Preserve all key terms, technical concepts, names, numbers, and important keywords from the original content. Do not omit crucial details or terminology.";
   
   const twitterContext = isTwitterContent ? 
-    "This appears to be Twitter/X content (thread, posts, or tweets). Extract and summarize the key points from the social media content. " : 
+    "This appears to be Twitter/X content (thread, posts, or tweets). Extract and summarize the key points from the social media content. Maintain all important keywords, names, technical terms, and specific details mentioned. " : 
     "";
   
   switch (tone) {
     case 'shitpost':
-      return `${twitterContext}Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. CRITICAL: Keep all important keywords, names, technical terms, and key concepts from the original. ${baseInstruction}\n\n${content}`;
     
     case 'infographics':
-      return `${twitterContext}Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. CRITICAL: Include all important keywords, numbers, names, and technical terms from the original content. ${baseInstruction}\n\n${content}`;
     
     case 'simple':
-      return `${twitterContext}Summarize this content in ${length} using simple, easy-to-understand language. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using simple, easy-to-understand language. CRITICAL: Even when simplifying, preserve all important keywords, names, technical terms, numbers, and key concepts from the original. ${baseInstruction}\n\n${content}`;
     
     case 'professional':
-      return `${twitterContext}Summarize this content in ${length} using a professional, business-appropriate tone. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a professional, business-appropriate tone. CRITICAL: Maintain all important keywords, technical terminology, names, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
     
     case 'conversational':
-      return `${twitterContext}Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. CRITICAL: Keep all important keywords, names, technical terms, and key details from the original content. ${baseInstruction}\n\n${content}`;
     
     default:
-      return `${twitterContext}Summarize this content in ${length} using a ${tone} tone. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a ${tone} tone. CRITICAL: Preserve all important keywords, names, technical terms, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
   }
 }
 // serve UI at root
