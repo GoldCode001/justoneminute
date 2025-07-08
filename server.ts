@@ -260,28 +260,43 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'No thread link or text provided.' });
       return;
     }
+    
+    console.log('Processing text:', threadText.substring(0, 100) + '...');
+    
     const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'qwen/qwq-32b:free',
-        
         messages: [{ role: 'user', content: `Summarize the following content in ${length}, using a ${tone} tone:\n\n${threadText}` }],
         max_tokens: 300,
-        temperature: 1.0
+        temperature: 0.7
       })
     });
+    
     if (!llmRes.ok) {
       const errText = await llmRes.text();
       console.error('OpenRouter API error:', errText);
-      throw new Error(errText || 'LLM summarization failed');
+      throw new Error(`OpenRouter API error (${llmRes.status}): ${errText || 'LLM summarization failed'}`);
     }
 
 
-
+    console.log('OpenRouter response status:', llmRes.status);
     const llmData = await llmRes.json();
+    console.log('OpenRouter response data:', JSON.stringify(llmData, null, 2));
+    
+    if (!llmData.choices || !llmData.choices[0] || !llmData.choices[0].message) {
+      console.error('Invalid response structure from OpenRouter:', llmData);
+      throw new Error('Invalid response from AI service');
+    }
+    
     const summary = llmData.choices[0].message.content.trim();
     console.log('LLM summary:', summary);
+    
+    if (!summary) {
+      throw new Error('Empty summary received from AI service');
+    }
+    
     res.json({ summary });
   } catch (err: any) {
     console.error('Error in /summarize:', err);
