@@ -65,12 +65,12 @@ exports.handler = async (event, context) => {
         'X-Title': 'Just One Minute'
       },
       body: JSON.stringify({
-        model: 'openai/gpt-3.5-turbo',
+        model: 'deepseek/deepseek-chat-v3-0324:free',
         messages: [{ 
           role: 'user', 
           content: prompt
         }],
-        max_tokens: 200,
+        max_tokens: 300,
         temperature: 0.7
       }),
       timeout: 7000
