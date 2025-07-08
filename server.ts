@@ -49,7 +49,7 @@ async function fetchContentFromTwitterUrls(urls: string[]): Promise<string> {
       contents.push(`--- Content from ${url} ---\n${content}`);
     } catch (error) {
       console.error(`Failed to fetch content from ${url}:`, error);
-      contents.push(`--- Could not fetch content from ${url} (${error.message}) ---`);
+      contents.push(`--- Could not fetch content from ${url} (${error instanceof Error ? error.message : 'Unknown error'}) ---`);
     }
   }
   
@@ -106,7 +106,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       } catch (error) {
         // If Twitter fetching fails, provide a helpful error message
         res.status(400).json({ 
-          error: `${error.message} You can copy and paste the tweet content directly into the text area instead.` 
+          error: `${error instanceof Error ? error.message : 'An unexpected error occurred.'} You can copy and paste the tweet content directly into the text area instead.` 
         });
         return;
       }
