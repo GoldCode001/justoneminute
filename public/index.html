@@ -62,9 +62,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
       user-select: none;
       justify-content: flex-start;
+    }
+    
+    .sidebar-toggle.open {
+      left: 340px;
     }
     
     .sidebar-toggle:hover {
@@ -79,16 +82,7 @@
     }
     
     .toggle-icon {
-      font-size: 1.2em;
-      margin-bottom: 4px;
-    }
-    
-    .toggle-text {
-      writing-mode: horizontal-tb;
-      font-size: 0.8em;
-      font-weight: 600;
-      text-align: center;
-      line-height: 1.2;
+      font-size: 1.5em;
     }
     
     .sidebar-header {
@@ -437,8 +431,7 @@
 </head>
 <body>
   <button type="button" id="sidebarToggle" class="sidebar-toggle">
-    <span id="toggleIcon" class="toggle-icon">☰</span>
-    <span id="toggleText" class="toggle-text">History</span>
+    <span id="toggleIcon" class="toggle-icon">📜</span>
   </button>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -493,7 +486,6 @@
   const sidebar = document.getElementById('sidebar');
   const sidebarToggle = document.getElementById('sidebarToggle');
   const toggleIcon = document.getElementById('toggleIcon');
-  const toggleText = document.getElementById('toggleText');
   let sidebarOpen = false;
   
   sidebarToggle.addEventListener('click', (e) => {
@@ -501,12 +493,12 @@
     sidebarOpen = !sidebarOpen;
     if (sidebarOpen) {
       sidebar.classList.add('open');
+      sidebarToggle.classList.add('open');
       toggleIcon.textContent = '✕';
-      toggleText.textContent = 'Close';
     } else {
       sidebar.classList.remove('open');
-      toggleIcon.textContent = '☰';
-      toggleText.textContent = 'History';
+      sidebarToggle.classList.remove('open');
+      toggleIcon.textContent = '📜';
     }
   });
   
@@ -517,8 +509,8 @@
         !sidebarToggle.contains(e.target)) {
       sidebarOpen = false;
       sidebar.classList.remove('open');
-      toggleIcon.textContent = '☰';
-      toggleText.textContent = 'History';
+      sidebarToggle.classList.remove('open');
+      toggleIcon.textContent = '📜';
     }
   });
   
