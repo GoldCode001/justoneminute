@@ -233,13 +233,14 @@ exports.handler = async (event, context) => {
   try {
     const { threadUrl, rawText, length, tone } = JSON.parse(event.body);
     
-    // Log the summarization request attempt
-    const contentType = threadUrl ? 'twitter_url' : (isTwitterContent ? 'twitter_text' : 'general_text');
-    
     let threadText;
     let isTwitterContent = false;
     
+    // Log the summarization request attempt
+    let contentType = 'general_text';
+    
     if (threadUrl && /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(threadUrl)) {
+      contentType = 'twitter_url';
       try {
         threadText = await fetchTwitterContent(threadUrl);
         isTwitterContent = true;
@@ -248,6 +249,7 @@ exports.handler = async (event, context) => {
         if (rawText && rawText.trim()) {
           threadText = rawText;
           isTwitterContent = true;
+          contentType = 'twitter_text';
         } else {
           return {
             statusCode: 400,
@@ -262,6 +264,7 @@ exports.handler = async (event, context) => {
       // Check if the raw text contains Twitter URLs
       const twitterUrls = extractTwitterUrls(rawText);
       if (twitterUrls.length > 0) {
+        contentType = 'twitter_text';
         // Try to fetch actual content from Twitter URLs, but don't fail if it doesn't work
         try {
           const fetchedContent = await fetchContentFromTwitterUrls(twitterUrls);
@@ -274,6 +277,7 @@ exports.handler = async (event, context) => {
       } else {
         // Check if the text looks like Twitter content
         isTwitterContent = detectTwitterContent(rawText);
+        contentType = isTwitterContent ? 'twitter_text' : 'general_text';
         threadText = rawText;
       }
     } else {
