@@ -184,7 +184,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
               'X-Title': 'Just One Minute'
             },
             body: JSON.stringify({
-              model: 'deepseek/deepseek-chat-v3-0324',
+              model: 'openrouter/cypher-alpha:free',
               messages: [{ 
                 role: 'user', 
                 content: getPromptForTone(tone, length, threadText, isTwitterContent)
