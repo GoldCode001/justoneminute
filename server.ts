@@ -64,6 +64,30 @@ async function fetchThreadTextFromTwitter(url: string): Promise<string> {
   return sorted.map(t => t.text).join('\n\n');
 }
 
+// generate appropriate prompt based on tone
+function getPromptForTone(tone: string, length: string, content: string): string {
+  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary.";
+  
+  switch (tone) {
+    case 'shitpost':
+      return `Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. ${baseInstruction}\n\n${content}`;
+    
+    case 'infographics':
+      return `Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. ${baseInstruction}\n\n${content}`;
+    
+    case 'simple':
+      return `Summarize this content in ${length} using simple, easy-to-understand language. ${baseInstruction}\n\n${content}`;
+    
+    case 'professional':
+      return `Summarize this content in ${length} using a professional, business-appropriate tone. ${baseInstruction}\n\n${content}`;
+    
+    case 'conversational':
+      return `Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. ${baseInstruction}\n\n${content}`;
+    
+    default:
+      return `Summarize this content in ${length} using a ${tone} tone. ${baseInstruction}\n\n${content}`;
+  }
+}
 // serve UI at root
 app.get('/', (_req: Request, res: Response): void => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
@@ -93,7 +117,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
         model: 'deepseek/deepseek-chat-v3-0324:free',
         messages: [{ 
           role: 'user', 
-          content: `Summarize this content in ${length} using a ${tone} tone. Provide only the summary without any introductory phrases, questions, or additional commentary. Use markdown formatting for emphasis when appropriate:\n\n${threadText}` 
+          content: getPromptForTone(tone, length, threadText)
         }],
         max_tokens: 300,
         temperature: 0.7
