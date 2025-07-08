@@ -177,7 +177,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
           
           return llmRes;
           
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Attempt ${attempt} failed:`, error);
           
           // If it's a timeout or network error and we have retries left, try again
