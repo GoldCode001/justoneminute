@@ -1,7 +1,7 @@
 {
   "name": "just-one-minute",
   "version": "1.0.0",
-  "description": "A Twitter thread summarizer using OpenRouter AI",
+  "description": "all you need is a minute...",
   "main": "dist/server.js",
   "type": "commonjs",
   "scripts": {
