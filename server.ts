@@ -91,7 +91,10 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'deepseek/deepseek-chat-v3-0324:free',
-        messages: [{ role: 'user', content: `Summarize the following content in ${length}, using a ${tone} tone:\n\n${threadText}` }],
+        messages: [{ 
+          role: 'user', 
+          content: `Summarize this content in ${length} using a ${tone} tone. Provide only the summary without any introductory phrases, questions, or additional commentary. Use markdown formatting for emphasis when appropriate:\n\n${threadText}` 
+        }],
         max_tokens: 300,
         temperature: 0.7
       })
