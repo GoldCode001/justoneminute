@@ -548,7 +548,7 @@
     historyList.innerHTML = summaryHistory.map(item => `
       <div class="history-item" onclick="loadHistoryItem(${item.id})">
         <div class="history-meta">${item.timestamp} • ${item.length} • ${item.tone}</div>
-        <div class="history-preview">${item.summary}</div>
+        <div class="history-preview">${item.summary.replace(/`/g, '\\`')}</div>
       </div>
     `).join('');
   }
