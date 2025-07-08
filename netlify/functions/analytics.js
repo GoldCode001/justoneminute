@@ -35,16 +35,28 @@ async function getGoogleSheetsClient() {
 // Log tone usage
 async function logToneUsage(tone) {
   try {
+    console.log(`Attempting to log tone usage: ${tone}`);
     const sheets = await getGoogleSheetsClient();
     const now = new Date();
     const timestamp = now.toISOString();
     const date = now.toISOString().split('T')[0]; // YYYY-MM-DD format
 
     // First, try to find if there's already an entry for today and this tone
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'ToneUsage!A:D'
-    });
+    let response;
+    try {
+      response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'ToneUsage!A:D'
+      });
+    } catch (error) {
+      console.error('Error reading ToneUsage sheet:', error);
+      // Try to initialize the sheet first
+      await initializeSheets();
+      response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'ToneUsage!A:D'
+      });
+    }
 
     const rows = response.data.values || [];
     let existingRowIndex = -1;
@@ -80,9 +92,9 @@ async function logToneUsage(tone) {
       });
     }
 
-    console.log(`Logged tone usage: ${tone} on ${date}`);
+    console.log(`Successfully logged tone usage: ${tone} on ${date}`);
   } catch (error) {
-    console.error('Error logging tone usage:', error);
+    console.error('Error logging tone usage:', error.message, error.stack);
     // Don't throw error to avoid breaking the main functionality
   }
 }
@@ -90,6 +102,7 @@ async function logToneUsage(tone) {
 // Log site visit
 async function logSiteVisit(userAgent = '', ip = '') {
   try {
+    console.log('Attempting to log site visit');
     const sheets = await getGoogleSheetsClient();
     const now = new Date();
     const timestamp = now.toISOString();
@@ -103,20 +116,44 @@ async function logSiteVisit(userAgent = '', ip = '') {
     const hashedIP = hashString(ip);
 
     // Log individual visit
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'SiteVisits!A:F',
-      valueInputOption: 'RAW',
-      resource: {
-        values: [[timestamp, date, hashedIP, browser, isMobile ? 'Mobile' : 'Desktop', userAgent.substring(0, 200)]]
-      }
-    });
+    try {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'SiteVisits!A:F',
+        valueInputOption: 'RAW',
+        resource: {
+          values: [[timestamp, date, hashedIP, browser, isMobile ? 'Mobile' : 'Desktop', userAgent.substring(0, 200)]]
+        }
+      });
+    } catch (error) {
+      console.error('Error writing to SiteVisits sheet:', error);
+      // Try to initialize sheets first
+      await initializeSheets();
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'SiteVisits!A:F',
+        valueInputOption: 'RAW',
+        resource: {
+          values: [[timestamp, date, hashedIP, browser, isMobile ? 'Mobile' : 'Desktop', userAgent.substring(0, 200)]]
+        }
+      });
+    }
 
     // Update daily summary
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'DailySummary!A:C'
-    });
+    let response;
+    try {
+      response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'DailySummary!A:C'
+      });
+    } catch (error) {
+      console.error('Error reading DailySummary sheet:', error);
+      await initializeSheets();
+      response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'DailySummary!A:C'
+      });
+    }
 
     const rows = response.data.values || [];
     let existingRowIndex = -1;
@@ -149,32 +186,46 @@ async function logSiteVisit(userAgent = '', ip = '') {
       });
     }
 
-    console.log(`Logged site visit on ${date}`);
+    console.log(`Successfully logged site visit on ${date}`);
   } catch (error) {
-    console.error('Error logging site visit:', error);
+    console.error('Error logging site visit:', error.message, error.stack);
   }
 }
 
 // Log summarization request
 async function logSummarizationRequest(tone, length, contentType, success = true) {
   try {
+    console.log(`Attempting to log summarization: ${tone}, ${length}, ${contentType}, ${success}`);
     const sheets = await getGoogleSheetsClient();
     const now = new Date();
     const timestamp = now.toISOString();
     const date = now.toISOString().split('T')[0];
 
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'SummarizationLogs!A:F',
-      valueInputOption: 'RAW',
-      resource: {
-        values: [[timestamp, date, tone, length, contentType, success ? 'Success' : 'Failed']]
-      }
-    });
+    try {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'SummarizationLogs!A:F',
+        valueInputOption: 'RAW',
+        resource: {
+          values: [[timestamp, date, tone, length, contentType, success ? 'Success' : 'Failed']]
+        }
+      });
+    } catch (error) {
+      console.error('Error writing to SummarizationLogs sheet:', error);
+      await initializeSheets();
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'SummarizationLogs!A:F',
+        valueInputOption: 'RAW',
+        resource: {
+          values: [[timestamp, date, tone, length, contentType, success ? 'Success' : 'Failed']]
+        }
+      });
+    }
 
-    console.log(`Logged summarization request: ${tone}, ${length}, ${contentType}, ${success ? 'Success' : 'Failed'}`);
+    console.log(`Successfully logged summarization request: ${tone}, ${length}, ${contentType}, ${success ? 'Success' : 'Failed'}`);
   } catch (error) {
-    console.error('Error logging summarization request:', error);
+    console.error('Error logging summarization request:', error.message, error.stack);
   }
 }
 
