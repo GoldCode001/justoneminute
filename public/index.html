@@ -548,7 +548,7 @@
     historyList.innerHTML = summaryHistory.map(item => `
       <div class="history-item" onclick="loadHistoryItem(${item.id})">
         <div class="history-meta">${item.timestamp} • ${item.length} • ${item.tone}</div>
-        <div class="history-preview">${item.summary.replace(/`/g, '\\`')}</div>
+        <div class="history-preview">${escapeHtml(item.summary)}</div>
       </div>
     `).join('');
   }
@@ -615,6 +615,13 @@
   
   // Initialize history display
   renderHistory();
+
+  // Helper function to escape HTML characters
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
   btn?.addEventListener('click', async () => {
     if (!errorEl || !summaryDisplay || !summaryContainer) return;
