@@ -43,24 +43,40 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Truncate very long text to prevent timeouts
+    if (threadText.length > 2000) {
+      threadText = threadText.substring(0, 2000) + '...';
+    }
+
     const prompt = getPromptForTone(tone, length, threadText);
     
-    const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 8000); // 8 second timeout
+    });
+
+    // Make the API call with timeout
+    const apiCallPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { 
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, 
-        'Content-Type': 'application/json' 
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://just-one-minute-goldman.netlify.app',
+        'X-Title': 'Just One Minute'
       },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-chat-v3-0324:free',
+        model: 'openai/gpt-3.5-turbo',
         messages: [{ 
           role: 'user', 
           content: prompt
         }],
-        max_tokens: 300,
+        max_tokens: 200,
         temperature: 0.7
-      })
+      }),
+      timeout: 7000
     });
+
+    const llmRes = await Promise.race([apiCallPromise, timeoutPromise]);
     
     if (!llmRes.ok) {
       const errText = await llmRes.text();
@@ -111,6 +127,16 @@ exports.handler = async (event, context) => {
     };
   } catch (err) {
     console.error('Error in summarize function:', err);
+    
+    // Handle timeout specifically
+    if (err.message === 'Request timeout') {
+      return {
+        statusCode: 408,
+        headers,
+        body: JSON.stringify({ error: 'Request timed out. Please try again with shorter text.' })
+      };
+    }
+    
     return {
       statusCode: 500,
       headers,
@@ -120,7 +146,7 @@ exports.handler = async (event, context) => {
 };
 
 function getPromptForTone(tone, length, content) {
-  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary.";
+  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary. Keep it concise.";
   
   switch (tone) {
     case 'shitpost':
