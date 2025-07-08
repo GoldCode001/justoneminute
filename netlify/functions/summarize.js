@@ -213,43 +213,73 @@ exports.handler = async (event, context) => {
     const prompt = getPromptForTone(tone, length, threadText, isTwitterContent);
     
     // Create a timeout promise
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout')), 8000); // 8 second timeout
-    });
+    const makeApiCallWithRetry = async (retries = 3) => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`API call attempt ${attempt}/${retries}`);
+          
+          // Create a timeout promise - increased to 15 seconds
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout')), 15000);
+          });
 
-    // Make the API call with timeout
-    const apiCallPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, 
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://just-one-minute-goldman.netlify.app',
-        'X-Title': 'Just One Minute'
-      },
-      body: JSON.stringify({
-        model: 'deepseek/deepseek-chat-v3-0324',
-        messages: [{ 
-          role: 'user', 
-          content: prompt
-        }],
-        max_tokens: 300,
-        temperature: 0.7
-      }),
-      timeout: 7000
-    });
+          // Make the API call with increased timeout - 12 seconds
+          const apiCallPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, 
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://just-one-minute-goldman.netlify.app',
+              'X-Title': 'Just One Minute'
+            },
+            body: JSON.stringify({
+              model: 'deepseek/deepseek-chat-v3-0324',
+              messages: [{ 
+                role: 'user', 
+                content: prompt
+              }],
+              max_tokens: 300,
+              temperature: 0.7
+            }),
+            timeout: 12000
+          });
 
-    const llmRes = await Promise.race([apiCallPromise, timeoutPromise]);
+          const llmRes = await Promise.race([apiCallPromise, timeoutPromise]);
+          
+          if (!llmRes.ok) {
+            const errText = await llmRes.text();
+            console.error(`OpenRouter API error (attempt ${attempt}):`, errText);
+            
+            // If it's a 5xx error or timeout, retry. If it's 4xx, don't retry
+            if (llmRes.status >= 500 && attempt < retries) {
+              console.log(`Retrying due to server error (${llmRes.status})...`);
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+              continue;
+            }
+            
+            throw new Error(`AI service error: ${errText}`);
+          }
+          
+          return llmRes;
+          
+        } catch (error) {
+          console.error(`Attempt ${attempt} failed:`, error.message);
+          
+          // If it's a timeout or network error and we have retries left, try again
+          if ((error.message === 'Request timeout' || error.message.includes('fetch')) && attempt < retries) {
+            console.log(`Retrying due to ${error.message}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+            continue;
+          }
+          
+          // If it's the last attempt or a non-retryable error, throw it
+          throw error;
+        }
+      }
+    };
+
+    const llmRes = await makeApiCallWithRetry();
     
-    if (!llmRes.ok) {
-      const errText = await llmRes.text();
-      console.error('OpenRouter API error:', errText);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: `AI service error: ${errText}` })
-      };
-    }
-
     const responseText = await llmRes.text();
     let llmData;
     try {
@@ -293,9 +323,9 @@ exports.handler = async (event, context) => {
     // Handle timeout specifically
     if (err.message === 'Request timeout') {
       return {
-        statusCode: 408,
+        statusCode: 504,
         headers,
-        body: JSON.stringify({ error: 'Request timed out. Please try again with shorter text.' })
+        body: JSON.stringify({ error: 'The AI service is taking longer than usual. We tried multiple times but it\'s still timing out. Try again in a moment or use shorter text.' })
       };
     }
     

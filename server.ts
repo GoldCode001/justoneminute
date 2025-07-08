@@ -134,28 +134,73 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     
     console.log('Processing text:', threadText.substring(0, 100) + '...');
     
-    const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'deepseek/deepseek-chat-v3-0324',
-        messages: [{ 
-          role: 'user', 
-          content: getPromptForTone(tone, length, threadText, isTwitterContent)
-        }],
-        max_tokens: 300,
-        temperature: 0.7
-      })
-    });
+    // Retry logic for API calls
+    const makeApiCallWithRetry = async (retries = 3) => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`API call attempt ${attempt}/${retries}`);
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+          
+          const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'deepseek/deepseek-chat-v3-0324',
+              messages: [{ 
+                role: 'user', 
+                content: getPromptForTone(tone, length, threadText, isTwitterContent)
+              }],
+              max_tokens: 300,
+              temperature: 0.7
+            }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!llmRes.ok) {
+            const errText = await llmRes.text();
+            console.error(`OpenRouter API error (attempt ${attempt}):`, errText);
+            
+            // If it's a 5xx error, retry. If it's 4xx, don't retry
+            if (llmRes.status >= 500 && attempt < retries) {
+              console.log(`Retrying due to server error (${llmRes.status})...`);
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+              continue;
+            }
+            
+            res.status(500).json({ error: `OpenRouter API error (${llmRes.status}): ${errText || 'LLM summarization failed'}` });
+            return null;
+          }
+          
+          return llmRes;
+          
+        } catch (error) {
+          console.error(`Attempt ${attempt} failed:`, error);
+          
+          // If it's a timeout or network error and we have retries left, try again
+          if ((error.name === 'AbortError' || error.message.includes('fetch')) && attempt < retries) {
+            console.log(`Retrying due to ${error.name === 'AbortError' ? 'timeout' : 'network error'}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+            continue;
+          }
+          
+          // If it's the last attempt or a non-retryable error, throw it
+          if (error.name === 'AbortError') {
+            res.status(504).json({ error: 'The AI service is taking longer than usual. We tried multiple times but it\'s still timing out. Try again in a moment or use shorter text.' });
+          } else {
+            res.status(500).json({ error: error.message || 'Network error occurred' });
+          }
+          return null;
+        }
+      }
+    };
+
+    const llmRes = await makeApiCallWithRetry();
+    if (!llmRes) return; // Error already handled in retry function
     
-    if (!llmRes.ok) {
-      const errText = await llmRes.text();
-      console.error('OpenRouter API error:', errText);
-      res.status(500).json({ error: `OpenRouter API error (${llmRes.status}): ${errText || 'LLM summarization failed'}` });
-      return;
-    }
-
-
     console.log('OpenRouter response status:', llmRes.status);
     const responseText = await llmRes.text();
     let llmData;
