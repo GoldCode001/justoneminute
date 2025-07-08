@@ -44,15 +44,16 @@
     
     .sidebar-toggle {
       position: fixed;
-      top: 50%;
+      top: 0;
       left: 20px;
-      transform: translateY(-50%);
+      height: 100vh;
+      width: 40px;
       z-index: 1001;
       background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
       color: #0a0a0a;
       border: none;
       border-radius: 0 12px 12px 0;
-      padding: 16px 12px;
+      padding: 20px 8px;
       font-size: 1.1em;
       font-weight: 700;
       cursor: pointer;
@@ -61,23 +62,33 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
       user-select: none;
-      min-width: 60px;
-      justify-content: center;
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
+      justify-content: flex-start;
     }
     
     .sidebar-toggle:hover {
-      transform: translateY(-50%) translateX(2px);
+      transform: translateX(2px);
       box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
       background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
     }
     
     .sidebar-toggle:active {
-      transform: translateY(-50%) translateX(0);
+      transform: translateX(0);
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    }
+    
+    .toggle-icon {
+      font-size: 1.2em;
+      margin-bottom: 4px;
+    }
+    
+    .toggle-text {
+      writing-mode: horizontal-tb;
+      font-size: 0.8em;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
     }
     
     .sidebar-header {
@@ -426,8 +437,8 @@
 </head>
 <body>
   <button type="button" id="sidebarToggle" class="sidebar-toggle">
-    <span id="toggleIcon">☰</span>
-    <span id="toggleText">History</span>
+    <span id="toggleIcon" class="toggle-icon">☰</span>
+    <span id="toggleText" class="toggle-text">History</span>
   </button>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
