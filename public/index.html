@@ -427,9 +427,77 @@
     .loading {
       animation: pulse 1.5s ease-in-out infinite;
     }
+    
+    /* Header styles */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      border-bottom: 2px solid #ffd700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
+    }
+    
+    .header-text {
+      color: #ffd700;
+      font-size: 1.1em;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .header-text:hover {
+      color: #ffed4e;
+      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+      transform: translateY(-1px);
+    }
+    
+    /* Footer styles */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      border-top: 1px solid #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    
+    .footer-text {
+      color: #888;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+    
+    /* Adjust main content to account for header and footer */
+    .main-content {
+      padding-top: 60px;
+      padding-bottom: 50px;
+      height: calc(100vh - 110px);
+    }
+    
+    .container {
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
+  <div class="header">
+    <a href="https://goldman.substack.com" target="_blank" class="header-text">
+      join my newsletter -- goldman.substack.com
+    </a>
+  </div>
+  
   <button type="button" id="sidebarToggle" class="sidebar-toggle">
     <span id="toggleIcon" class="toggle-icon">📜</span>
   </button>
@@ -467,6 +535,11 @@
       </div>
     </div>
   </div>
+  
+  <div class="footer">
+    <div class="footer-text">...made with 🖤 by goldman</div>
+  </div>
+  
 <script>
   console.log('script loaded');
   const btn = document.getElementById('summarizeBtn');
