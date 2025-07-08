@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
 import path from 'path';
+import { AbortController } from 'abort-controller';
 
 dotenv.config();
 
