@@ -516,8 +516,8 @@
   // Close sidebar when clicking outside
   document.addEventListener('click', (e) => {
     if (sidebarOpen && 
-        !sidebar?.contains(e.target as Node) && 
-        !sidebarToggle?.contains(e.target as Node)) {
+        !sidebar?.contains(e.target) && 
+        !sidebarToggle?.contains(e.target)) {
       sidebarOpen = false;
       sidebar?.classList.remove('open');
       toggleIcon.textContent = '☰';
