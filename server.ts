@@ -33,6 +33,32 @@ if (missingVars.length > 0) {
 // initialize Twitter client with bearer token
 const twitterClient = new TwitterApi(requiredEnvVars.TWITTER_BEARER_TOKEN!);
 
+// Helper function to detect and extract Twitter URLs from text
+function extractTwitterUrls(text: string): string[] {
+  const twitterUrlRegex = /https?:\/\/(?:twitter|x)\.com\/[^\/\s]+\/status\/\d+/g;
+  return text.match(twitterUrlRegex) || [];
+}
+
+// Helper function to detect if text contains Twitter-like content
+function detectTwitterContent(text: string): boolean {
+  const twitterIndicators = [
+    /\d+\/\d+/g, // Tweet numbering like "1/5"
+    /@\w+/g, // Mentions
+    /#\w+/g, // Hashtags
+    /🧵/g, // Thread emoji
+    /Thread:/i, // Thread indicator
+    /THREAD/i, // Thread indicator caps
+  ];
+  
+  let score = 0;
+  twitterIndicators.forEach(regex => {
+    const matches = text.match(regex);
+    if (matches) score += matches.length;
+  });
+  
+  return score > 2; // If we find multiple indicators, likely Twitter content
+}
+
 const app = express();
 // default port
 const PORT = process.env.PORT || 3000;
@@ -50,9 +76,19 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     res.setHeader('Content-Type', 'application/json');
     
     let threadText: string;
+    let isTwitterContent = false;
+    
     if (threadUrl && /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(threadUrl)) {
       threadText = await fetchThreadTextFromTwitter(threadUrl);
+      isTwitterContent = true;
     } else if (rawText && rawText.length > 0) {
+      // Check if the raw text contains Twitter URLs or looks like Twitter content
+      const twitterUrls = extractTwitterUrls(rawText);
+      if (twitterUrls.length > 0) {
+        isTwitterContent = true;
+      } else {
+        isTwitterContent = detectTwitterContent(rawText);
+      }
       threadText = rawText;
     } else {
       res.status(400).json({ error: 'No thread link or text provided.' });
@@ -68,7 +104,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
         model: 'deepseek/deepseek-chat-v3-0324',
         messages: [{ 
           role: 'user', 
-          content: getPromptForTone(tone, length, threadText)
+          content: getPromptForTone(tone, length, threadText, isTwitterContent)
         }],
         max_tokens: 300,
         temperature: 0.7
@@ -145,27 +181,31 @@ async function fetchThreadTextFromTwitter(url: string): Promise<string> {
 }
 
 // generate appropriate prompt based on tone
-function getPromptForTone(tone: string, length: string, content: string): string {
-  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary.";
+function getPromptForTone(tone: string, length: string, content: string, isTwitterContent: boolean = false): string {
+  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary. Do not ask questions or request clarification. Keep it concise and direct.";
+  
+  const twitterContext = isTwitterContent ? 
+    "This appears to be Twitter/X content (thread, posts, or tweets). Extract and summarize the key points from the social media content. " : 
+    "";
   
   switch (tone) {
     case 'shitpost':
-      return `Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. ${baseInstruction}\n\n${content}`;
     
     case 'infographics':
-      return `Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. ${baseInstruction}\n\n${content}`;
     
     case 'simple':
-      return `Summarize this content in ${length} using simple, easy-to-understand language. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using simple, easy-to-understand language. ${baseInstruction}\n\n${content}`;
     
     case 'professional':
-      return `Summarize this content in ${length} using a professional, business-appropriate tone. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a professional, business-appropriate tone. ${baseInstruction}\n\n${content}`;
     
     case 'conversational':
-      return `Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. ${baseInstruction}\n\n${content}`;
     
     default:
-      return `Summarize this content in ${length} using a ${tone} tone. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a ${tone} tone. ${baseInstruction}\n\n${content}`;
   }
 }
 // serve UI at root
