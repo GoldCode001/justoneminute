@@ -49,8 +49,12 @@ async function fetchContentFromTwitterUrls(urls: string[]): Promise<string> {
       contents.push(`--- Content from ${url} ---\n${content}`);
     } catch (error) {
       console.error(`Failed to fetch content from ${url}:`, error);
-      contents.push(`--- Failed to fetch content from ${url} ---`);
+      contents.push(`--- Could not fetch content from ${url} (${error.message}) ---`);
     }
+  }
+  
+  if (contents.length === 0) {
+    throw new Error('Could not fetch content from any of the provided Twitter URLs');
   }
   
   return contents.join('\n\n');
@@ -96,15 +100,28 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     let isTwitterContent = false;
     
     if (threadUrl && /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(threadUrl)) {
-      threadText = await fetchThreadTextFromTwitter(threadUrl);
-      isTwitterContent = true;
+      try {
+        threadText = await fetchThreadTextFromTwitter(threadUrl);
+        isTwitterContent = true;
+      } catch (error) {
+        // If Twitter fetching fails, provide a helpful error message
+        res.status(400).json({ 
+          error: `${error.message} You can copy and paste the tweet content directly into the text area instead.` 
+        });
+        return;
+      }
     } else if (rawText && rawText.length > 0) {
       // Check if the raw text contains Twitter URLs or looks like Twitter content
       const twitterUrls = extractTwitterUrls(rawText);
       if (twitterUrls.length > 0) {
-        // Fetch actual content from Twitter URLs
-        const fetchedContent = await fetchContentFromTwitterUrls(twitterUrls);
-        threadText = `${rawText}\n\n--- FETCHED TWITTER CONTENT ---\n${fetchedContent}`;
+        // Try to fetch actual content from Twitter URLs, but don't fail if it doesn't work
+        try {
+          const fetchedContent = await fetchContentFromTwitterUrls(twitterUrls);
+          threadText = `${rawText}\n\n--- FETCHED TWITTER CONTENT ---\n${fetchedContent}`;
+        } catch (error) {
+          console.log('Failed to fetch Twitter URLs from text, using raw text:', error);
+          threadText = rawText; // Use the raw text as fallback
+        }
         isTwitterContent = true;
       } else {
         isTwitterContent = detectTwitterContent(rawText);
@@ -189,40 +206,56 @@ async function fetchThreadTextFromTwitter(url: string): Promise<string> {
   const threadId = extractThreadId(url);
   
   try {
-    // First try to get the original tweet
-    const originalTweet = await twitterClient.v2.singleTweet(threadId, {
-      'tweet.fields': ['text', 'created_at', 'conversation_id', 'author_id'],
-      'user.fields': ['username', 'name']
-    });
+    // Try multiple approaches to get Twitter content
+    let content = '';
     
-    if (!originalTweet.data) {
-      throw new Error('Unable to fetch original tweet');
+    try {
+      // First try to get the original tweet
+      const originalTweet = await twitterClient.v2.singleTweet(threadId, {
+        'tweet.fields': ['text', 'created_at', 'conversation_id', 'author_id'],
+        'user.fields': ['username', 'name'],
+        expansions: ['author_id']
+      });
+      
+      if (originalTweet.data) {
+        content = originalTweet.data.text;
+        
+        // Try to get the full conversation/thread
+        try {
+          const response = await twitterClient.v2.search(`conversation_id:${threadId}`, {
+            'tweet.fields': ['text', 'created_at', 'author_id'],
+            'user.fields': ['username', 'name'],
+            max_results: 100,
+            sort_order: 'recency'
+          });
+          
+          const tweets = response.data?.data || [];
+          
+          if (tweets.length > 0) {
+            // Sort tweets chronologically and combine
+            const sorted = tweets.sort((a, b) =>
+              new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
+            );
+            
+            content = sorted.map((t, index) => `${index + 1}. ${t.text}`).join('\n\n');
+          }
+        } catch (searchError) {
+          console.log('Thread search failed, using original tweet only:', searchError);
+          // Keep the original tweet content
+        }
+        
+        return content;
+      }
+    } catch (apiError) {
+      console.error('Twitter API error:', apiError);
+      // Fall back to a generic message that indicates the URL was provided
+      throw new Error(`Unable to fetch Twitter content from ${url}. The link may be private, deleted, or require authentication. Please copy and paste the text content directly instead.`);
     }
     
-    // Then search for the full conversation/thread
-    const response = await twitterClient.v2.search(`conversation_id:${threadId}`, {
-      'tweet.fields': ['text', 'created_at', 'author_id'],
-      'user.fields': ['username', 'name'],
-      max_results: 100,
-      sort_order: 'recency'
-    });
-    
-    const tweets = response.data?.data || [];
-    
-    // If we only have the original tweet, return it
-    if (tweets.length === 0) {
-      return originalTweet.data.text;
-    }
-    
-    // Sort tweets chronologically and combine
-    const sorted = tweets.sort((a, b) =>
-      new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
-    );
-    
-    return sorted.map((t, index) => `${index + 1}. ${t.text}`).join('\n\n');
+    throw new Error('No content could be retrieved from the Twitter URL');
   } catch (error) {
     console.error('Error fetching Twitter thread:', error);
-    throw new Error('Unable to fetch thread content. Please check the URL and try again.');
+    throw error;
   }
 }
 

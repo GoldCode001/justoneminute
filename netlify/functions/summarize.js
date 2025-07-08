@@ -18,6 +18,10 @@ async function fetchTwitterContent(url) {
   try {
     const threadId = extractThreadId(url);
     
+    if (!process.env.TWITTER_BEARER_TOKEN) {
+      throw new Error('Twitter API access not configured');
+    }
+    
     // First try to get the original tweet
     const originalResponse = await fetch(`https://api.twitter.com/2/tweets/${threadId}?tweet.fields=text,created_at,conversation_id,author_id&user.fields=username,name`, {
       headers: {
@@ -60,17 +64,27 @@ async function fetchTwitterContent(url) {
         return originalTweet.text;
       }
     } else {
-      throw new Error(`Twitter API request failed: ${originalResponse.status}`);
+      const errorData = await originalResponse.json().catch(() => ({}));
+      if (originalResponse.status === 401) {
+        throw new Error('Twitter API authentication failed');
+      } else if (originalResponse.status === 403) {
+        throw new Error('Tweet is private or protected');
+      } else if (originalResponse.status === 404) {
+        throw new Error('Tweet not found or has been deleted');
+      } else {
+        throw new Error(`Twitter API error: ${originalResponse.status} - ${errorData.detail || 'Unknown error'}`);
+      }
     }
   } catch (error) {
     console.error('Error fetching Twitter content:', error);
-    return `Unable to fetch content from ${url} - ${error.message}`;
+    throw new Error(`Unable to fetch content from ${url}: ${error.message}`);
   }
 }
 
 // Helper function to fetch content from multiple Twitter URLs
 async function fetchContentFromTwitterUrls(urls) {
   const contents = [];
+  const errors = [];
   
   for (const url of urls.slice(0, 3)) { // Limit to 3 URLs to prevent timeouts
     try {
@@ -78,8 +92,17 @@ async function fetchContentFromTwitterUrls(urls) {
       contents.push(`--- Content from ${url} ---\n${content}`);
     } catch (error) {
       console.error(`Failed to fetch content from ${url}:`, error);
-      contents.push(`--- Failed to fetch content from ${url} ---`);
+      errors.push(`${url}: ${error.message}`);
     }
+  }
+  
+  if (contents.length === 0) {
+    throw new Error(`Could not fetch any Twitter content. Errors: ${errors.join('; ')}`);
+  }
+  
+  // If we have some content but also some errors, include both
+  if (errors.length > 0) {
+    contents.push(`--- Errors fetching some URLs ---\n${errors.join('\n')}`);
   }
   
   return contents.join('\n\n');
@@ -138,15 +161,36 @@ exports.handler = async (event, context) => {
     let isTwitterContent = false;
     
     if (threadUrl && /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(threadUrl)) {
-      threadText = rawText || threadUrl;
-      isTwitterContent = true;
+      try {
+        threadText = await fetchTwitterContent(threadUrl);
+        isTwitterContent = true;
+      } catch (error) {
+        // If Twitter fetching fails, check if we have rawText as fallback
+        if (rawText && rawText.trim()) {
+          threadText = rawText;
+          isTwitterContent = true;
+        } else {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ 
+              error: `${error.message} Please copy and paste the tweet content directly into the text area instead.` 
+            })
+          };
+        }
+      }
     } else if (rawText && rawText.length > 0) {
       // Check if the raw text contains Twitter URLs
       const twitterUrls = extractTwitterUrls(rawText);
       if (twitterUrls.length > 0) {
-        // Fetch actual content from Twitter URLs
-        const fetchedContent = await fetchContentFromTwitterUrls(twitterUrls);
-        threadText = `${rawText}\n\n--- FETCHED TWITTER CONTENT ---\n${fetchedContent}`;
+        // Try to fetch actual content from Twitter URLs, but don't fail if it doesn't work
+        try {
+          const fetchedContent = await fetchContentFromTwitterUrls(twitterUrls);
+          threadText = `${rawText}\n\n--- FETCHED TWITTER CONTENT ---\n${fetchedContent}`;
+        } catch (error) {
+          console.log('Failed to fetch Twitter URLs from text, using raw text:', error);
+          threadText = rawText; // Use the raw text as fallback
+        }
         isTwitterContent = true;
       } else {
         // Check if the text looks like Twitter content
