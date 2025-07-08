@@ -22,12 +22,15 @@ async function fetchTwitterContent(url) {
       throw new Error('Twitter API access not configured');
     }
     
-    // First try to get the original tweet
-    const originalResponse = await fetch(`https://api.twitter.com/2/tweets/${threadId}?tweet.fields=text,created_at,conversation_id,author_id&user.fields=username,name`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.TWITTER_BEARER_TOKEN}`
-      }
-    });
+    // First try to get the original tweet with shorter timeout
+    const originalResponse = await Promise.race([
+      fetch(`https://api.twitter.com/2/tweets/${threadId}?tweet.fields=text,created_at,conversation_id,author_id&user.fields=username,name`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.TWITTER_BEARER_TOKEN}`
+        }
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Twitter API timeout')), 3000))
+    ]);
     
     if (originalResponse.ok) {
       const originalData = await originalResponse.json();
@@ -37,30 +40,38 @@ async function fetchTwitterContent(url) {
         throw new Error('Unable to fetch original tweet');
       }
       
-      // Try to get the full thread/conversation
-      const conversationResponse = await fetch(`https://api.twitter.com/2/tweets/search/recent?query=conversation_id:${threadId}&tweet.fields=text,created_at,author_id&user.fields=username,name&max_results=100&sort_order=recency`, {
-        headers: {
-          'Authorization': `Bearer ${process.env.TWITTER_BEARER_TOKEN}`
-        }
-      });
-      
-      if (conversationResponse.ok) {
-        const conversationData = await conversationResponse.json();
-        const tweets = conversationData.data || [];
+      // Try to get the full thread/conversation with shorter timeout
+      try {
+        const conversationResponse = await Promise.race([
+          fetch(`https://api.twitter.com/2/tweets/search/recent?query=conversation_id:${threadId}&tweet.fields=text,created_at,author_id&user.fields=username,name&max_results=100&sort_order=recency`, {
+            headers: {
+              'Authorization': `Bearer ${process.env.TWITTER_BEARER_TOKEN}`
+            }
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Twitter search timeout')), 2000))
+        ]);
         
-        if (tweets.length === 0) {
-          // Just return the original tweet if no thread found
+        if (conversationResponse.ok) {
+          const conversationData = await conversationResponse.json();
+          const tweets = conversationData.data || [];
+          
+          if (tweets.length === 0) {
+            // Just return the original tweet if no thread found
+            return originalTweet.text;
+          }
+          
+          // Sort tweets chronologically and combine
+          const sorted = tweets.sort((a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+          
+          return sorted.map((t, index) => `${index + 1}. ${t.text}`).join('\n\n');
+        } else {
+          // Fallback to just the original tweet
           return originalTweet.text;
         }
-        
-        // Sort tweets chronologically and combine
-        const sorted = tweets.sort((a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-        
-        return sorted.map((t, index) => `${index + 1}. ${t.text}`).join('\n\n');
-      } else {
-        // Fallback to just the original tweet
+      } catch (searchError) {
+        console.log('Thread search failed, using original tweet only:', searchError);
         return originalTweet.text;
       }
     } else {
@@ -86,7 +97,7 @@ async function fetchContentFromTwitterUrls(urls) {
   const contents = [];
   const errors = [];
   
-  for (const url of urls.slice(0, 3)) { // Limit to 3 URLs to prevent timeouts
+  for (const url of urls.slice(0, 2)) { // Limit to 2 URLs to prevent timeouts
     try {
       const content = await fetchTwitterContent(url);
       contents.push(`--- Content from ${url} ---\n${content}`);
@@ -129,6 +140,9 @@ function detectTwitterContent(text) {
 }
 
 exports.handler = async (event, context) => {
+  // Set context timeout to maximum available
+  context.callbackWaitsForEmptyEventLoop = false;
+  
   // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -205,25 +219,26 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Truncate very long text to prevent timeouts
-    if (threadText.length > 2000) {
-      threadText = threadText.substring(0, 2000) + '...';
+    // Truncate very long text to prevent timeouts - more aggressive truncation
+    if (threadText.length > 1500) {
+      threadText = threadText.substring(0, 1500) + '...';
     }
 
     const prompt = getPromptForTone(tone, length, threadText, isTwitterContent);
     
-    // Create a timeout promise
-    const makeApiCallWithRetry = async (retries = 3) => {
+    // Aggressive retry logic with very short timeouts to stay within 10 second limit
+    const makeApiCallWithRetry = async (retries = 2) => {
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           console.log(`API call attempt ${attempt}/${retries}`);
           
-          // Create a timeout promise - increased to 15 seconds
+          // Very aggressive timeout - 4 seconds for first attempt, 3 for retry
+          const timeoutMs = attempt === 1 ? 4000 : 3000;
+          
           const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Request timeout')), 15000);
+            setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
           });
 
-          // Make the API call with increased timeout - 12 seconds
           const apiCallPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: { 
@@ -238,22 +253,21 @@ exports.handler = async (event, context) => {
                 role: 'user', 
                 content: prompt
               }],
-              max_tokens: 300,
+              max_tokens: 250, // Reduced to get faster responses
               temperature: 0.7
-            }),
-            timeout: 12000
+            })
           });
 
           const llmRes = await Promise.race([apiCallPromise, timeoutPromise]);
           
           if (!llmRes.ok) {
-            const errText = await llmRes.text();
+            const errText = await llmRes.text().catch(() => 'Unknown error');
             console.error(`OpenRouter API error (attempt ${attempt}):`, errText);
             
-            // If it's a 5xx error or timeout, retry. If it's 4xx, don't retry
+            // Only retry on 5xx errors and if we have attempts left
             if (llmRes.status >= 500 && attempt < retries) {
               console.log(`Retrying due to server error (${llmRes.status})...`);
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+              await new Promise(resolve => setTimeout(resolve, 500)); // Very short backoff
               continue;
             }
             
@@ -265,10 +279,10 @@ exports.handler = async (event, context) => {
         } catch (error) {
           console.error(`Attempt ${attempt} failed:`, error.message);
           
-          // If it's a timeout or network error and we have retries left, try again
-          if ((error.message === 'Request timeout' || error.message.includes('fetch')) && attempt < retries) {
+          // Only retry timeouts and network errors if we have attempts left
+          if ((error.message === 'Request timeout' || error.message.includes('fetch') || error.code === 'ECONNRESET') && attempt < retries) {
             console.log(`Retrying due to ${error.message}...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+            await new Promise(resolve => setTimeout(resolve, 300)); // Very short backoff
             continue;
           }
           
@@ -325,7 +339,9 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 504,
         headers,
-        body: JSON.stringify({ error: 'The AI service is taking longer than usual. We tried multiple times but it\'s still timing out. Try again in a moment or use shorter text.' })
+        body: JSON.stringify({ 
+          error: 'The AI service is taking too long to respond. This usually happens with very long text. Try using shorter text or try again in a moment.' 
+        })
       };
     }
     
@@ -338,29 +354,29 @@ exports.handler = async (event, context) => {
 };
 
 function getPromptForTone(tone, length, content, isTwitterContent = false) {
-  const baseInstruction = "Write like a real human who actually understands this stuff. No corporate speak, no robotic responses. Be conversational, relatable, and authentic. Use natural language, contractions, and explain things like you're talking to a friend. CRITICAL: Keep all important keywords, names, technical terms, numbers, and key details from the original - but explain them in human terms when needed. Never ask questions or request clarification.";
+  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary. Do not ask questions or request clarification. Keep it concise and direct. IMPORTANT: Preserve all key terms, technical concepts, names, numbers, and important keywords from the original content. Do not omit crucial details or terminology.";
   
   const twitterContext = isTwitterContent ? 
-    "This is Twitter/X content. Pull out the main points and make them digestible. Keep all the important stuff - names, numbers, technical terms - but make it actually readable. " : 
+    "This appears to be Twitter/X content (thread, posts, or tweets). Extract and summarize the key points from the social media content. Maintain all important keywords, names, technical terms, and specific details mentioned. " : 
     "";
   
   switch (tone) {
     case 'shitpost':
-      return `${twitterContext}Turn this into a ${length} shitpost that actually slaps. Use internet slang, memes, and make it funny as hell while still hitting the main points. Don't be cringe about it - make it genuinely entertaining. Keep all the important names, numbers, and technical stuff but make it memeable. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. CRITICAL: Keep all important keywords, names, technical terms, and key concepts from the original. ${baseInstruction}\n\n${content}`;
     
     case 'infographics':
-      return `${twitterContext}Make this into ${length} that would work perfectly in an infographic. Think clean sections, bullet points, key stats, and visual structure. Use emojis naturally (not overdoing it). Keep all the important numbers, names, and technical details but organize them so they're easy to scan and understand. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. CRITICAL: Include all important keywords, numbers, names, and technical terms from the original content. ${baseInstruction}\n\n${content}`;
     
     case 'simple':
-      return `${twitterContext}Break this down into ${length} that anyone can understand. Think "explain it like I'm 5" but not condescending. Use analogies, simple examples, and everyday language. Keep all the important names, numbers, and technical stuff but explain what they actually mean in real terms. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using simple, easy-to-understand language. CRITICAL: Even when simplifying, preserve all important keywords, names, technical terms, numbers, and key concepts from the original. ${baseInstruction}\n\n${content}`;
     
     case 'professional':
-      return `${twitterContext}Write this as ${length} in a professional tone that doesn't sound like corporate BS. Be polished but still human - like how you'd explain it in a good meeting or email to colleagues. Keep all the technical terms, names, numbers, and key details but make it business-appropriate without being stuffy. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a professional, business-appropriate tone. CRITICAL: Maintain all important keywords, technical terminology, names, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
     
     case 'conversational':
-      return `${twitterContext}Explain this in ${length} like you're talking to a friend over coffee. Be natural, use contractions, throw in some personality. Make it feel like a real conversation - not a presentation. Keep all the important names, numbers, and technical details but explain them in a way that feels genuine and relatable. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. CRITICAL: Keep all important keywords, names, technical terms, and key details from the original content. ${baseInstruction}\n\n${content}`;
     
     default:
-      return `${twitterContext}Write this as ${length} with a ${tone} tone that feels authentic and human. Don't sound like a robot or use corporate speak. Keep all the important keywords, names, technical terms, numbers, and key details from the original but make it actually engaging to read. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a ${tone} tone. CRITICAL: Preserve all important keywords, names, technical terms, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
   }
 }
