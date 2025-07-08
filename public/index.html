@@ -571,7 +571,7 @@
       // Convert bullet points
       .replace(/^[•·-]\s+(.+)$/gm, '<li>$1</li>')
       // Wrap consecutive list items in <ul>
-      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+      .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>')
       // Convert numbered lists
       .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
       // Convert ### headers
