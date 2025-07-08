@@ -4,7 +4,7 @@
 
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
+import fetch, { AbortController } from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
 import path from 'path';
 
