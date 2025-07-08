@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "prebuild": "npm install vite --no-save",
-    "build": "npx vite build",
+    "build": "npx vite build && cp public/index.html dist/",
     "start": "node dist/server.js",
     "dev": "npx tsc && node dist/server.js"
   },

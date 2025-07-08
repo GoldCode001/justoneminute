@@ -705,7 +705,7 @@
     }
 
     try {
-      const res = await fetch('/summarize', {
+      const res = await fetch('/.netlify/functions/summarize', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threadUrl, rawText, length, tone })
       });
