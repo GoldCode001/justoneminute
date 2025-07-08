@@ -139,6 +139,67 @@ function detectTwitterContent(text) {
   return score > 2; // If we find multiple indicators, likely Twitter content
 }
 
+// NEW: Intelligent content analysis function
+function analyzeContent(text) {
+  const analysis = {
+    contentType: 'general',
+    keyTopics: [],
+    technicalTerms: [],
+    names: [],
+    numbers: [],
+    mainPoints: [],
+    complexity: 'medium',
+    language: 'english'
+  };
+  
+  // Detect content type
+  if (detectTwitterContent(text)) {
+    analysis.contentType = 'social_media';
+  } else if (text.match(/\b(research|study|analysis|findings|methodology|conclusion)\b/gi)) {
+    analysis.contentType = 'academic';
+  } else if (text.match(/\b(revenue|profit|market|business|company|CEO|startup)\b/gi)) {
+    analysis.contentType = 'business';
+  } else if (text.match(/\b(code|programming|software|API|database|algorithm)\b/gi)) {
+    analysis.contentType = 'technical';
+  } else if (text.match(/\b(breaking|news|report|according to|sources)\b/gi)) {
+    analysis.contentType = 'news';
+  }
+  
+  // Extract key elements
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+  
+  // Extract names (capitalized words that aren't common words)
+  const commonWords = new Set(['The', 'This', 'That', 'These', 'Those', 'And', 'But', 'Or', 'So', 'For', 'If', 'When', 'Where', 'Why', 'How', 'What', 'Who', 'Which']);
+  const nameMatches = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [];
+  analysis.names = [...new Set(nameMatches.filter(name => !commonWords.has(name)))].slice(0, 10);
+  
+  // Extract numbers and percentages
+  analysis.numbers = [...new Set(text.match(/\b\d+(?:[.,]\d+)*%?(?:\s*(?:million|billion|thousand|k|M|B))?\b/g) || [])].slice(0, 10);
+  
+  // Extract technical terms (words with specific patterns)
+  const techTerms = text.match(/\b[A-Z]{2,}(?:[A-Z][a-z]*)*\b|\b\w+(?:API|SDK|AI|ML|UI|UX|SaaS|IoT)\b|\b\w*(?:tech|soft|ware|system|platform|framework)\w*\b/gi) || [];
+  analysis.technicalTerms = [...new Set(techTerms)].slice(0, 10);
+  
+  // Determine complexity
+  const avgWordsPerSentence = sentences.reduce((sum, s) => sum + s.split(' ').length, 0) / sentences.length;
+  const complexWords = text.match(/\b\w{8,}\b/g) || [];
+  
+  if (avgWordsPerSentence > 25 || complexWords.length > text.split(' ').length * 0.3) {
+    analysis.complexity = 'high';
+  } else if (avgWordsPerSentence < 15 && complexWords.length < text.split(' ').length * 0.1) {
+    analysis.complexity = 'low';
+  }
+  
+  // Extract main points (sentences with key indicators)
+  analysis.mainPoints = sentences
+    .filter(s => s.match(/\b(key|important|main|significant|crucial|essential|primary|major)\b/gi) || 
+                 s.match(/\b(because|therefore|however|moreover|furthermore|additionally)\b/gi) ||
+                 s.length > 50)
+    .slice(0, 5);
+  
+  return analysis;
+}
+
 exports.handler = async (event, context) => {
   // Set context timeout to maximum available
   context.callbackWaitsForEmptyEventLoop = false;
@@ -224,7 +285,11 @@ exports.handler = async (event, context) => {
       threadText = threadText.substring(0, 1500) + '...';
     }
 
-    const prompt = getPromptForTone(tone, length, threadText, isTwitterContent);
+    // NEW: Analyze the content before summarization
+    const contentAnalysis = analyzeContent(threadText);
+    console.log('Content analysis:', contentAnalysis);
+
+    const prompt = getPromptForTone(tone, length, threadText, isTwitterContent, contentAnalysis);
     
     // Aggressive retry logic with very short timeouts to stay within 10 second limit
     const makeApiCallWithRetry = async (retries = 2) => {
@@ -253,8 +318,8 @@ exports.handler = async (event, context) => {
                 role: 'user', 
                 content: prompt
               }],
-              max_tokens: 250, // Reduced to get faster responses
-              temperature: 0.7
+              max_tokens: 300, // Increased slightly for better quality
+              temperature: 0.6 // Slightly lower for more consistent output
             })
           });
 
@@ -316,7 +381,7 @@ exports.handler = async (event, context) => {
       };
     }
     
-    const summary = llmData.choices[0].message.content.trim();
+    let summary = llmData.choices[0].message.content.trim();
     
     if (!summary) {
       return {
@@ -325,6 +390,9 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ error: 'Empty summary received from AI service' })
       };
     }
+
+    // NEW: Post-process the summary to ensure clarity and remove any bogus content
+    summary = postProcessSummary(summary, tone, contentAnalysis);
     
     return {
       statusCode: 200,
@@ -353,30 +421,123 @@ exports.handler = async (event, context) => {
   }
 };
 
-function getPromptForTone(tone, length, content, isTwitterContent = false) {
-  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary. Do not ask questions or request clarification. Keep it concise and direct. IMPORTANT: Preserve all key terms, technical concepts, names, numbers, and important keywords from the original content. Do not omit crucial details or terminology.";
+// NEW: Post-processing function to clean up and improve summary quality
+function postProcessSummary(summary, tone, contentAnalysis) {
+  // Remove common AI artifacts and filler phrases
+  const artifactsToRemove = [
+    /^(Here's|Here is|This is|The following is|In summary|To summarize|Based on|According to)\s+/i,
+    /\b(I think|I believe|It seems|It appears|Perhaps|Maybe|Possibly)\b/gi,
+    /\b(very very|really really|quite quite)\b/gi, // Remove redundant intensifiers
+    /\b(um|uh|er|ah)\b/gi, // Remove filler words
+    /\.\.\.\s*$/, // Remove trailing ellipsis
+    /^[^\w]*/, // Remove leading non-word characters
+    /[^\w\s.,!?;:'"()-]*$/ // Remove trailing non-standard characters
+  ];
+  
+  let cleaned = summary;
+  artifactsToRemove.forEach(pattern => {
+    cleaned = cleaned.replace(pattern, '');
+  });
+  
+  // Fix common formatting issues
+  cleaned = cleaned
+    .replace(/\s+/g, ' ') // Multiple spaces to single space
+    .replace(/([.!?])\s*([a-z])/g, '$1 $2') // Ensure space after punctuation
+    .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space between camelCase words
+    .trim();
+  
+  // Ensure proper capitalization
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  
+  // Tone-specific post-processing
+  switch (tone) {
+    case 'simple':
+      // Replace complex words with simpler alternatives
+      const simplifications = {
+        'utilize': 'use',
+        'demonstrate': 'show',
+        'facilitate': 'help',
+        'implement': 'do',
+        'subsequently': 'then',
+        'approximately': 'about',
+        'numerous': 'many',
+        'substantial': 'large'
+      };
+      Object.entries(simplifications).forEach(([complex, simple]) => {
+        cleaned = cleaned.replace(new RegExp(`\\b${complex}\\b`, 'gi'), simple);
+      });
+      break;
+      
+    case 'professional':
+      // Ensure professional language consistency
+      cleaned = cleaned
+        .replace(/\bcan't\b/g, 'cannot')
+        .replace(/\bwon't\b/g, 'will not')
+        .replace(/\bdon't\b/g, 'do not');
+      break;
+      
+    case 'shitpost':
+      // Ensure it doesn't go too far into nonsense
+      if (cleaned.length < 20 || !cleaned.match(/[a-zA-Z]/)) {
+        cleaned = "This content is basically saying: " + cleaned;
+      }
+      break;
+  }
+  
+  // Final validation - ensure the summary makes sense
+  if (cleaned.length < 10 || !cleaned.match(/[a-zA-Z]/)) {
+    cleaned = "Unable to generate a clear summary. The content may be too complex or unclear.";
+  }
+  
+  return cleaned;
+}
+
+// UPDATED: Enhanced prompt generation with content analysis
+function getPromptForTone(tone, length, content, isTwitterContent = false, contentAnalysis = null) {
+  const analysisContext = contentAnalysis ? `
+CONTENT ANALYSIS:
+- Type: ${contentAnalysis.contentType}
+- Complexity: ${contentAnalysis.complexity}
+- Key names: ${contentAnalysis.names.join(', ')}
+- Important numbers: ${contentAnalysis.numbers.join(', ')}
+- Technical terms: ${contentAnalysis.technicalTerms.join(', ')}
+
+CRITICAL INSTRUCTIONS:
+` : '';
+  
+  const baseInstruction = `${analysisContext}You are an expert content summarizer. Read and understand the content first, then provide ONLY the summary response without any introductory phrases, questions, or commentary. 
+
+MANDATORY REQUIREMENTS:
+1. Preserve ALL important names, numbers, technical terms, and key concepts from the original
+2. Write in clear, understandable language with NO confusing or bogus words
+3. Ensure the summary is factually accurate and makes complete sense
+4. Use proper grammar and sentence structure
+5. Never ask questions or request clarification
+6. Provide only the summary content, nothing else`;
   
   const twitterContext = isTwitterContent ? 
-    "This appears to be Twitter/X content (thread, posts, or tweets). Extract and summarize the key points from the social media content. Maintain all important keywords, names, technical terms, and specific details mentioned. " : 
+    "This is Twitter/X content. Extract the main points and make them digestible while keeping all important details. " : 
     "";
   
   switch (tone) {
     case 'shitpost':
-      return `${twitterContext}Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. CRITICAL: Keep all important keywords, names, technical terms, and key concepts from the original. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Transform this into a ${length} shitpost that's genuinely funny and entertaining while capturing all the main points. Use internet slang and memes naturally, but ensure it's still informative and makes complete sense. Keep ALL important names, numbers, and technical details but present them in a humorous way. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'infographics':
-      return `${twitterContext}Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. CRITICAL: Include all important keywords, numbers, names, and technical terms from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Convert this into ${length} infographic-style content with clear structure, bullet points, and key statistics. Use emojis appropriately and organize information for easy scanning. Include ALL important numbers, names, and technical details in a visually structured format. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'simple':
-      return `${twitterContext}Summarize this content in ${length} using simple, easy-to-understand language. CRITICAL: Even when simplifying, preserve all important keywords, names, technical terms, numbers, and key concepts from the original. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Explain this in ${length} using simple, everyday language that anyone can understand. Break down complex concepts into easy-to-grasp explanations. Keep ALL important names, numbers, and technical terms but explain what they mean in plain English. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'professional':
-      return `${twitterContext}Summarize this content in ${length} using a professional, business-appropriate tone. CRITICAL: Maintain all important keywords, technical terminology, names, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this in ${length} using professional, business-appropriate language that's polished but not stuffy. Maintain all technical terminology, names, numbers, and key details while ensuring clarity and professionalism. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'conversational':
-      return `${twitterContext}Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. CRITICAL: Keep all important keywords, names, technical terms, and key details from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Explain this in ${length} like you're having a friendly conversation with someone. Use natural language, contractions, and a warm tone while keeping all important names, numbers, and technical details. Make it feel genuine and relatable. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     default:
-      return `${twitterContext}Summarize this content in ${length} using a ${tone} tone. CRITICAL: Preserve all important keywords, names, technical terms, numbers, and key concepts from the original content. ${baseInstruction}\n\n${content}`;
+      return `${twitterContext}Summarize this content in ${length} using a ${tone} tone that's clear, accurate, and engaging. Preserve ALL important keywords, names, technical terms, numbers, and key concepts from the original while ensuring the summary is easy to understand. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
   }
 }
