@@ -39,60 +39,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
 
-// helper: extract thread id from tweet URL (supports twitter.com & x.com)
-function extractThreadId(url: string): string {
-  const match = url.match(/https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/(\d+)/);
-  if (!match) throw new Error('Invalid Twitter URL format');
-  return match[1];
-}
-
-// fetch full thread text by conversation_id
-async function fetchThreadTextFromTwitter(url: string): Promise<string> {
-  const threadId = extractThreadId(url);
-  const response = await twitterClient.v2.search(`conversation_id:${threadId}`, {
-    'tweet.fields': ['text', 'created_at'],
-    max_results: 100,
-    sort_order: 'recency'
-  });
-  const tweets = response.data?.data;
-  if (!tweets || tweets.length === 0) throw new Error('Unable to fetch thread content');
-  const sorted = tweets.sort((a, b) =>
-    new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
-  );
-  return sorted.map(t => t.text).join('\n\n');
-}
-
-// generate appropriate prompt based on tone
-function getPromptForTone(tone: string, length: string, content: string): string {
-  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary.";
-  
-  switch (tone) {
-    case 'shitpost':
-      return `Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. ${baseInstruction}\n\n${content}`;
-    
-    case 'infographics':
-      return `Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. ${baseInstruction}\n\n${content}`;
-    
-    case 'simple':
-      return `Summarize this content in ${length} using simple, easy-to-understand language. ${baseInstruction}\n\n${content}`;
-    
-    case 'professional':
-      return `Summarize this content in ${length} using a professional, business-appropriate tone. ${baseInstruction}\n\n${content}`;
-    
-    case 'conversational':
-      return `Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. ${baseInstruction}\n\n${content}`;
-    
-    default:
-      return `Summarize this content in ${length} using a ${tone} tone. ${baseInstruction}\n\n${content}`;
-  }
-}
-// serve UI at root
-app.get('/', (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
+// API routes first, before static files
 // summarization endpoint
 app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
   const { threadUrl, rawText, length, tone } = req.body as { threadUrl?: string; rawText?: string; length: string; tone: string };
@@ -152,6 +100,61 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     console.error('Error in /summarize:', err);
     res.status(500).json({ error: err.message });
   }
+});
+
+// Static files after API routes
+app.use(express.static('public'));
+
+// helper: extract thread id from tweet URL (supports twitter.com & x.com)
+function extractThreadId(url: string): string {
+  const match = url.match(/https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/(\d+)/);
+  if (!match) throw new Error('Invalid Twitter URL format');
+  return match[1];
+}
+
+// fetch full thread text by conversation_id
+async function fetchThreadTextFromTwitter(url: string): Promise<string> {
+  const threadId = extractThreadId(url);
+  const response = await twitterClient.v2.search(`conversation_id:${threadId}`, {
+    'tweet.fields': ['text', 'created_at'],
+    max_results: 100,
+    sort_order: 'recency'
+  });
+  const tweets = response.data?.data;
+  if (!tweets || tweets.length === 0) throw new Error('Unable to fetch thread content');
+  const sorted = tweets.sort((a, b) =>
+    new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
+  );
+  return sorted.map(t => t.text).join('\n\n');
+}
+
+// generate appropriate prompt based on tone
+function getPromptForTone(tone: string, length: string, content: string): string {
+  const baseInstruction = "Provide only the response without any introductory phrases, questions, or additional commentary.";
+  
+  switch (tone) {
+    case 'shitpost':
+      return `Transform this content into a ${length} shitpost format. Use internet slang, memes, and humorous takes. Make it funny and irreverent while capturing the main points. ${baseInstruction}\n\n${content}`;
+    
+    case 'infographics':
+      return `Convert this content into ${length} infographic-style text. Use clear headings, bullet points, key statistics, and structured information that would work well in a visual format. Include emojis and formatting for visual appeal. ${baseInstruction}\n\n${content}`;
+    
+    case 'simple':
+      return `Summarize this content in ${length} using simple, easy-to-understand language. ${baseInstruction}\n\n${content}`;
+    
+    case 'professional':
+      return `Summarize this content in ${length} using a professional, business-appropriate tone. ${baseInstruction}\n\n${content}`;
+    
+    case 'conversational':
+      return `Summarize this content in ${length} using a friendly, conversational tone as if explaining to a friend. ${baseInstruction}\n\n${content}`;
+    
+    default:
+      return `Summarize this content in ${length} using a ${tone} tone. ${baseInstruction}\n\n${content}`;
+  }
+}
+// serve UI at root
+app.get('/', (_req: Request, res: Response): void => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 app.listen(PORT, (): void => console.log(`thread summarizer running on port ${PORT}`));
