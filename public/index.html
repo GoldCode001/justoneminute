@@ -39,6 +39,7 @@
     
     .sidebar.open {
       transform: translateX(0);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.7), 320px 0 0 rgba(0, 0, 0, 0.3);
     }
     
     .sidebar-toggle {
@@ -59,6 +60,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      user-select: none;
     }
     
     .sidebar-toggle:hover {
@@ -70,6 +72,25 @@
     .sidebar-toggle:active {
       transform: translateY(0);
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    }
+    
+    /* Overlay when sidebar is open */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
     }
     
     .sidebar-header {
@@ -418,6 +439,7 @@
   </style>
 </head>
 <body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <button type="button" id="sidebarToggle" class="sidebar-toggle">
     <span id="toggleIcon">☰</span>
     <span id="toggleText">History</span>
