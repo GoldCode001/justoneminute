@@ -4,7 +4,7 @@
 
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import AbortController from 'abort-controller'
+import AbortController from 'abort-controller';
 import fetch from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
 import path from 'path';
@@ -192,7 +192,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
               max_tokens: 400,
               temperature: 0.7
             }),
-            signal: controller.signal
+            signal: controller.signal as any
           });
           
           clearTimeout(timeoutId);
@@ -327,7 +327,7 @@ async function fetchThreadTextFromTwitter(url: string): Promise<string> {
             // Sort tweets chronologically and combine
             const sorted = tweets.sort((a, b) => {
               const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-              const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+              const dateB = b.created_at ? new Date(b.created_at!).getTime() : 0;
               return dateA - dateB;
             });
             
