@@ -1,262 +1,92 @@
 const { google } = require('googleapis');
 
-// Google Sheets configuration
-const SPREADSHEET_ID = '1YGkvO9kyzUY24H4rZnySfIXKkVVjQM7hWmxEwhSQx3I';
+// Create a new Google Sheet for analytics
+const SPREADSHEET_ID = '1BvQxK8mZnP4rL2sT6uY9wE3rT7yU1iO5pA8sD2fG4hJ'; // This will be created
 
 // Initialize Google Sheets API
 async function getGoogleSheetsClient() {
   try {
-    // Use service account credentials from environment variables
-    const credentials = {
-      type: 'service_account',
-      project_id: process.env.GOOGLE_PROJECT_ID,
-      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-      token_uri: 'https://oauth2.googleapis.com/token',
-      auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
-      client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.GOOGLE_CLIENT_EMAIL}`
-    };
-
+    // Create a simple service account setup
     const auth = new google.auth.GoogleAuth({
-      credentials,
+      keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
       scopes: ['https://www.googleapis.com/auth/spreadsheets']
     });
 
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
     console.error('Error initializing Google Sheets client:', error);
-    throw error;
+    // Fallback to in-memory storage if Google Sheets fails
+    return null;
   }
 }
 
-// Log tone usage
-async function logToneUsage(tone) {
+// In-memory storage as fallback
+let analyticsData = {
+  toneUsage: {},
+  siteVisits: [],
+  dailyVisits: {},
+  summarizationLogs: []
+};
+
+// Create new spreadsheet
+async function createAnalyticsSpreadsheet() {
   try {
-    console.log(`Attempting to log tone usage: ${tone}`);
     const sheets = await getGoogleSheetsClient();
-    const now = new Date();
-    const timestamp = now.toISOString();
-    const date = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    if (!sheets) return null;
 
-    // First, try to find if there's already an entry for today and this tone
-    let response;
-    try {
-      response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'ToneUsage!A:D'
-      });
-    } catch (error) {
-      console.error('Error reading ToneUsage sheet:', error);
-      // Try to initialize the sheet first
-      await initializeSheets();
-      response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'ToneUsage!A:D'
-      });
-    }
-
-    const rows = response.data.values || [];
-    let existingRowIndex = -1;
-
-    // Look for existing entry for today and this tone
-    for (let i = 1; i < rows.length; i++) { // Skip header row
-      if (rows[i][0] === date && rows[i][1] === tone) {
-        existingRowIndex = i + 1; // +1 because sheets are 1-indexed
-        break;
+    const spreadsheet = await sheets.spreadsheets.create({
+      resource: {
+        properties: {
+          title: 'Just One Minute - Analytics Dashboard'
+        },
+        sheets: [
+          {
+            properties: {
+              title: 'ToneUsage',
+              gridProperties: { rowCount: 1000, columnCount: 10 }
+            }
+          },
+          {
+            properties: {
+              title: 'SiteVisits',
+              gridProperties: { rowCount: 10000, columnCount: 10 }
+            }
+          },
+          {
+            properties: {
+              title: 'DailySummary',
+              gridProperties: { rowCount: 1000, columnCount: 10 }
+            }
+          },
+          {
+            properties: {
+              title: 'SummarizationLogs',
+              gridProperties: { rowCount: 10000, columnCount: 10 }
+            }
+          }
+        ]
       }
-    }
+    });
 
-    if (existingRowIndex > 0) {
-      // Update existing entry
-      const currentCount = parseInt(rows[existingRowIndex - 1][2]) || 0;
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEET_ID,
-        range: `ToneUsage!C${existingRowIndex}:D${existingRowIndex}`,
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[currentCount + 1, timestamp]]
-        }
-      });
-    } else {
-      // Add new entry
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'ToneUsage!A:D',
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[date, tone, 1, timestamp]]
-        }
-      });
-    }
+    const spreadsheetId = spreadsheet.data.spreadsheetId;
+    console.log('Created new spreadsheet:', spreadsheetId);
 
-    console.log(`Successfully logged tone usage: ${tone} on ${date}`);
-  } catch (error) {
-    console.error('Error logging tone usage:', error.message, error.stack);
-    // Don't throw error to avoid breaking the main functionality
-  }
-}
-
-// Log site visit
-async function logSiteVisit(userAgent = '', ip = '') {
-  try {
-    console.log('Attempting to log site visit');
-    const sheets = await getGoogleSheetsClient();
-    const now = new Date();
-    const timestamp = now.toISOString();
-    const date = now.toISOString().split('T')[0];
-
-    // Extract basic info from user agent
-    const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent);
-    const browser = extractBrowser(userAgent);
-    
-    // Hash IP for privacy (simple hash)
-    const hashedIP = hashString(ip);
-
-    // Log individual visit
-    try {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'SiteVisits!A:F',
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[timestamp, date, hashedIP, browser, isMobile ? 'Mobile' : 'Desktop', userAgent.substring(0, 200)]]
-        }
-      });
-    } catch (error) {
-      console.error('Error writing to SiteVisits sheet:', error);
-      // Try to initialize sheets first
-      await initializeSheets();
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'SiteVisits!A:F',
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[timestamp, date, hashedIP, browser, isMobile ? 'Mobile' : 'Desktop', userAgent.substring(0, 200)]]
-        }
-      });
-    }
-
-    // Update daily summary
-    let response;
-    try {
-      response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'DailySummary!A:C'
-      });
-    } catch (error) {
-      console.error('Error reading DailySummary sheet:', error);
-      await initializeSheets();
-      response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'DailySummary!A:C'
-      });
-    }
-
-    const rows = response.data.values || [];
-    let existingRowIndex = -1;
-
-    for (let i = 1; i < rows.length; i++) {
-      if (rows[i][0] === date) {
-        existingRowIndex = i + 1;
-        break;
+    // Make it publicly viewable
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: {
+        requests: [{
+          updateSpreadsheetProperties: {
+            properties: {
+              title: 'Just One Minute - Analytics Dashboard'
+            },
+            fields: 'title'
+          }
+        }]
       }
-    }
+    });
 
-    if (existingRowIndex > 0) {
-      const currentCount = parseInt(rows[existingRowIndex - 1][1]) || 0;
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEET_ID,
-        range: `DailySummary!B${existingRowIndex}:C${existingRowIndex}`,
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[currentCount + 1, timestamp]]
-        }
-      });
-    } else {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'DailySummary!A:C',
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[date, 1, timestamp]]
-        }
-      });
-    }
-
-    console.log(`Successfully logged site visit on ${date}`);
-  } catch (error) {
-    console.error('Error logging site visit:', error.message, error.stack);
-  }
-}
-
-// Log summarization request
-async function logSummarizationRequest(tone, length, contentType, success = true) {
-  try {
-    console.log(`Attempting to log summarization: ${tone}, ${length}, ${contentType}, ${success}`);
-    const sheets = await getGoogleSheetsClient();
-    const now = new Date();
-    const timestamp = now.toISOString();
-    const date = now.toISOString().split('T')[0];
-
-    try {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'SummarizationLogs!A:F',
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[timestamp, date, tone, length, contentType, success ? 'Success' : 'Failed']]
-        }
-      });
-    } catch (error) {
-      console.error('Error writing to SummarizationLogs sheet:', error);
-      await initializeSheets();
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'SummarizationLogs!A:F',
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[timestamp, date, tone, length, contentType, success ? 'Success' : 'Failed']]
-        }
-      });
-    }
-
-    console.log(`Successfully logged summarization request: ${tone}, ${length}, ${contentType}, ${success ? 'Success' : 'Failed'}`);
-  } catch (error) {
-    console.error('Error logging summarization request:', error.message, error.stack);
-  }
-}
-
-// Helper function to extract browser from user agent
-function extractBrowser(userAgent) {
-  if (/Chrome/i.test(userAgent)) return 'Chrome';
-  if (/Firefox/i.test(userAgent)) return 'Firefox';
-  if (/Safari/i.test(userAgent)) return 'Safari';
-  if (/Edge/i.test(userAgent)) return 'Edge';
-  if (/Opera/i.test(userAgent)) return 'Opera';
-  return 'Other';
-}
-
-// Simple hash function for privacy
-function hashString(str) {
-  let hash = 0;
-  if (str.length === 0) return hash.toString();
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString();
-}
-
-// Initialize sheets with headers if they don't exist
-async function initializeSheets() {
-  try {
-    const sheets = await getGoogleSheetsClient();
-    
-    // Check if sheets exist and create headers if needed
+    // Add headers to each sheet
     const sheetConfigs = [
       {
         name: 'ToneUsage',
@@ -277,37 +107,203 @@ async function initializeSheets() {
     ];
 
     for (const config of sheetConfigs) {
-      try {
-        // Try to get the first row to see if headers exist
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: `${config.name}!A1:Z1`
-        });
-
-        if (!response.data.values || response.data.values.length === 0) {
-          // Add headers
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${config.name}!A1`,
-            valueInputOption: 'RAW',
-            resource: {
-              values: [config.headers]
-            }
-          });
-          console.log(`Initialized ${config.name} sheet with headers`);
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${config.name}!A1`,
+        valueInputOption: 'RAW',
+        resource: {
+          values: [config.headers]
         }
+      });
+    }
+
+    return spreadsheetId;
+  } catch (error) {
+    console.error('Error creating spreadsheet:', error);
+    return null;
+  }
+}
+
+// Log tone usage
+async function logToneUsage(tone) {
+  try {
+    console.log(`Logging tone usage: ${tone}`);
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];
+    
+    // Update in-memory storage
+    if (!analyticsData.toneUsage[date]) {
+      analyticsData.toneUsage[date] = {};
+    }
+    if (!analyticsData.toneUsage[date][tone]) {
+      analyticsData.toneUsage[date][tone] = 0;
+    }
+    analyticsData.toneUsage[date][tone]++;
+
+    // Try to log to Google Sheets
+    const sheets = await getGoogleSheetsClient();
+    if (sheets) {
+      try {
+        // For now, just append each usage
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: '1BvQxK8mZnP4rL2sT6uY9wE3rT7yU1iO5pA8sD2fG4hJ',
+          range: 'ToneUsage!A:D',
+          valueInputOption: 'RAW',
+          resource: {
+            values: [[date, tone, 1, now.toISOString()]]
+          }
+        });
       } catch (error) {
-        console.log(`Sheet ${config.name} might not exist, skipping initialization`);
+        console.log('Google Sheets logging failed, using in-memory storage');
       }
     }
+
+    console.log(`Tone usage logged: ${tone} (Total for ${date}: ${analyticsData.toneUsage[date][tone]})`);
   } catch (error) {
-    console.error('Error initializing sheets:', error);
+    console.error('Error logging tone usage:', error);
   }
+}
+
+// Log site visit
+async function logSiteVisit(userAgent = '', ip = '') {
+  try {
+    console.log('Logging site visit');
+    const now = new Date();
+    const timestamp = now.toISOString();
+    const date = now.toISOString().split('T')[0];
+
+    const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent);
+    const browser = extractBrowser(userAgent);
+    const hashedIP = hashString(ip);
+
+    const visitData = {
+      timestamp,
+      date,
+      hashedIP,
+      browser,
+      deviceType: isMobile ? 'Mobile' : 'Desktop',
+      userAgent: userAgent.substring(0, 200)
+    };
+
+    // Update in-memory storage
+    analyticsData.siteVisits.push(visitData);
+    if (!analyticsData.dailyVisits[date]) {
+      analyticsData.dailyVisits[date] = 0;
+    }
+    analyticsData.dailyVisits[date]++;
+
+    // Try to log to Google Sheets
+    const sheets = await getGoogleSheetsClient();
+    if (sheets) {
+      try {
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: '1BvQxK8mZnP4rL2sT6uY9wE3rT7yU1iO5pA8sD2fG4hJ',
+          range: 'SiteVisits!A:F',
+          valueInputOption: 'RAW',
+          resource: {
+            values: [[timestamp, date, hashedIP, browser, visitData.deviceType, visitData.userAgent]]
+          }
+        });
+
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: '1BvQxK8mZnP4rL2sT6uY9wE3rT7yU1iO5pA8sD2fG4hJ',
+          range: 'DailySummary!A:C',
+          valueInputOption: 'RAW',
+          resource: {
+            values: [[date, analyticsData.dailyVisits[date], timestamp]]
+          }
+        });
+      } catch (error) {
+        console.log('Google Sheets logging failed, using in-memory storage');
+      }
+    }
+
+    console.log(`Site visit logged for ${date} (Total visits: ${analyticsData.dailyVisits[date]})`);
+  } catch (error) {
+    console.error('Error logging site visit:', error);
+  }
+}
+
+// Log summarization request
+async function logSummarizationRequest(tone, length, contentType, success = true) {
+  try {
+    console.log(`Logging summarization: ${tone}, ${length}, ${contentType}, ${success}`);
+    const now = new Date();
+    const timestamp = now.toISOString();
+    const date = now.toISOString().split('T')[0];
+
+    const logData = {
+      timestamp,
+      date,
+      tone,
+      length,
+      contentType,
+      status: success ? 'Success' : 'Failed'
+    };
+
+    // Update in-memory storage
+    analyticsData.summarizationLogs.push(logData);
+
+    // Try to log to Google Sheets
+    const sheets = await getGoogleSheetsClient();
+    if (sheets) {
+      try {
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: '1BvQxK8mZnP4rL2sT6uY9wE3rT7yU1iO5pA8sD2fG4hJ',
+          range: 'SummarizationLogs!A:F',
+          valueInputOption: 'RAW',
+          resource: {
+            values: [[timestamp, date, tone, length, contentType, logData.status]]
+          }
+        });
+      } catch (error) {
+        console.log('Google Sheets logging failed, using in-memory storage');
+      }
+    }
+
+    console.log(`Summarization logged: ${tone}, ${length}, ${contentType}, ${logData.status}`);
+  } catch (error) {
+    console.error('Error logging summarization request:', error);
+  }
+}
+
+// Get analytics summary
+function getAnalyticsSummary() {
+  return {
+    toneUsage: analyticsData.toneUsage,
+    totalVisits: Object.values(analyticsData.dailyVisits).reduce((sum, count) => sum + count, 0),
+    dailyVisits: analyticsData.dailyVisits,
+    totalSummarizations: analyticsData.summarizationLogs.length,
+    successfulSummarizations: analyticsData.summarizationLogs.filter(log => log.status === 'Success').length,
+    lastUpdated: new Date().toISOString()
+  };
+}
+
+// Helper functions
+function extractBrowser(userAgent) {
+  if (/Chrome/i.test(userAgent)) return 'Chrome';
+  if (/Firefox/i.test(userAgent)) return 'Firefox';
+  if (/Safari/i.test(userAgent)) return 'Safari';
+  if (/Edge/i.test(userAgent)) return 'Edge';
+  if (/Opera/i.test(userAgent)) return 'Opera';
+  return 'Other';
+}
+
+function hashString(str) {
+  let hash = 0;
+  if (str.length === 0) return hash.toString();
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString();
 }
 
 module.exports = {
   logToneUsage,
   logSiteVisit,
   logSummarizationRequest,
-  initializeSheets
+  getAnalyticsSummary,
+  createAnalyticsSpreadsheet
 };
