@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { logToneUsage, logSummarizationRequest } = require('./analytics');
 
 // Helper function to detect and extract Twitter URLs from text
 function extractTwitterUrls(text) {
@@ -232,6 +233,9 @@ exports.handler = async (event, context) => {
   try {
     const { threadUrl, rawText, length, tone } = JSON.parse(event.body);
     
+    // Log the summarization request attempt
+    const contentType = threadUrl ? 'twitter_url' : (isTwitterContent ? 'twitter_text' : 'general_text');
+    
     let threadText;
     let isTwitterContent = false;
     
@@ -394,6 +398,12 @@ exports.handler = async (event, context) => {
     // NEW: Post-process the summary to ensure clarity and remove any bogus content
     summary = postProcessSummary(summary, tone, contentAnalysis);
     
+    // Log successful tone usage and summarization
+    await Promise.all([
+      logToneUsage(tone),
+      logSummarizationRequest(tone, length, contentType, true)
+    ]);
+    
     return {
       statusCode: 200,
       headers,
@@ -401,6 +411,15 @@ exports.handler = async (event, context) => {
     };
   } catch (err) {
     console.error('Error in summarize function:', err);
+    
+    // Log failed summarization attempt
+    try {
+      const { tone, length } = JSON.parse(event.body);
+      const contentType = 'unknown';
+      await logSummarizationRequest(tone || 'unknown', length || 'unknown', contentType, false);
+    } catch (logError) {
+      console.error('Error logging failed request:', logError);
+    }
     
     // Handle timeout specifically
     if (err.message === 'Request timeout') {

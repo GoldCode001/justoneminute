@@ -676,6 +676,12 @@
   
   // Initialize history display
   renderHistory();
+  
+  // Track site visit when page loads
+  fetch('/.netlify/functions/track-visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }).catch(err => console.log('Visit tracking failed:', err));
 
   // Helper function to escape HTML characters
   function escapeHtml(text) {
@@ -735,6 +741,8 @@
       // Save to history
       const source = threadUrl || rawText;
       saveToHistory(data.summary, source, length, tone);
+      
+      console.log(`Successfully used tone: ${tone} with length: ${length}`);
     } catch (err) {
       errorEl.textContent = err.message || 'Error occurred';
       summaryDisplay.innerHTML = '';
