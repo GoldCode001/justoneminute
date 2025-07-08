@@ -39,22 +39,30 @@ function extractTwitterUrls(text: string): string[] {
   return text.match(twitterUrlRegex) || [];
 }
 
-// Helper function to fetch content from multiple Twitter URLs
+// Helper function to fetch content from multiple Twitter URLs with retry logic
 async function fetchContentFromTwitterUrls(urls: string[]): Promise<string> {
   const contents: string[] = [];
+  const errors: string[] = [];
   
-  for (const url of urls) {
+  // Limit to 3 URLs to prevent timeouts
+  for (const url of urls.slice(0, 3)) {
     try {
       const content = await fetchThreadTextFromTwitter(url);
       contents.push(`--- Content from ${url} ---\n${content}`);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error(`Failed to fetch content from ${url}:`, error);
-      contents.push(`--- Could not fetch content from ${url} (${error instanceof Error ? error.message : 'Unknown error'}) ---`);
+      errors.push(`${url}: ${errorMessage}`);
     }
   }
   
   if (contents.length === 0) {
-    throw new Error('Could not fetch content from any of the provided Twitter URLs');
+    throw new Error(`Could not fetch content from any of the provided Twitter URLs. Errors: ${errors.join('; ')}`);
+  }
+  
+  // If we have some content but also some errors, include both
+  if (errors.length > 0) {
+    contents.push(`--- Errors fetching some URLs ---\n${errors.join('\n')}`);
   }
   
   return contents.join('\n\n');
@@ -84,13 +92,19 @@ const app = express();
 // default port
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Increase payload limits to handle larger text inputs
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // API routes first, before static files
 // summarization endpoint
 app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
-  const { threadUrl, rawText, length, tone } = req.body as { threadUrl?: string; rawText?: string; length: string; tone: string };
+  const { threadUrl, rawText, length, tone } = req.body as { 
+    threadUrl?: string; 
+    rawText?: string; 
+    length: string; 
+    tone: string; 
+  };
   
   try {
     // Set proper headers for JSON response
@@ -99,16 +113,28 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     let threadText: string;
     let isTwitterContent = false;
     
+    // Input validation
+    if (!threadUrl && !rawText) {
+      res.status(400).json({ error: 'No thread link or text provided.' });
+      return;
+    }
+    
     if (threadUrl && /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(threadUrl)) {
       try {
         threadText = await fetchThreadTextFromTwitter(threadUrl);
         isTwitterContent = true;
       } catch (error) {
-        // If Twitter fetching fails, provide a helpful error message
-        res.status(400).json({ 
-          error: `${error instanceof Error ? error.message : 'An unexpected error occurred.'} You can copy and paste the tweet content directly into the text area instead.` 
-        });
-        return;
+        // If Twitter fetching fails, check if we have rawText as fallback
+        if (rawText && rawText.trim()) {
+          threadText = rawText;
+          isTwitterContent = true;
+        } else {
+          const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.';
+          res.status(400).json({ 
+            error: `${errorMessage} You can copy and paste the tweet content directly into the text area instead.` 
+          });
+          return;
+        }
       }
     } else if (rawText && rawText.length > 0) {
       // Check if the raw text contains Twitter URLs or looks like Twitter content
@@ -132,27 +158,37 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       return;
     }
     
+    // Truncate very long text to prevent timeouts and token limits
+    if (threadText.length > 8000) {
+      threadText = threadText.substring(0, 8000) + '...';
+    }
+    
     console.log('Processing text:', threadText.substring(0, 100) + '...');
     
     // Retry logic for API calls
-    const makeApiCallWithRetry = async (retries = 3) => {
+    const makeApiCallWithRetry = async (retries = 3): Promise<any> => {
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           console.log(`API call attempt ${attempt}/${retries}`);
           
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
           
           const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+            headers: { 
+              'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://just-one-minute-goldman.netlify.app',
+              'X-Title': 'Just One Minute'
+            },
             body: JSON.stringify({
               model: 'deepseek/deepseek-chat-v3-0324',
               messages: [{ 
                 role: 'user', 
                 content: getPromptForTone(tone, length, threadText, isTwitterContent)
               }],
-              max_tokens: 300,
+              max_tokens: 400,
               temperature: 0.7
             }),
             signal: controller.signal
@@ -164,15 +200,14 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
             const errText = await llmRes.text();
             console.error(`OpenRouter API error (attempt ${attempt}):`, errText);
             
-            // If it's a 5xx error, retry. If it's 4xx, don't retry
-            if (llmRes.status >= 500 && attempt < retries) {
+            // If it's a 5xx error or rate limit, retry. If it's 4xx (except 429), don't retry
+            if ((llmRes.status >= 500 || llmRes.status === 429) && attempt < retries) {
               console.log(`Retrying due to server error (${llmRes.status})...`);
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt * attempt)); // Exponential backoff
               continue;
             }
             
-            res.status(500).json({ error: `OpenRouter API error (${llmRes.status}): ${errText || 'LLM summarization failed'}` });
-            return null;
+            throw new Error(`OpenRouter API error (${llmRes.status}): ${errText || 'LLM summarization failed'}`);
           }
           
           return llmRes;
@@ -181,28 +216,30 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
           console.error(`Attempt ${attempt} failed:`, error);
           
           // If it's a timeout or network error and we have retries left, try again
-          if ((error.name === 'AbortError' || error.message.includes('fetch')) && attempt < retries) {
+          if ((error.name === 'AbortError' || error.message?.includes('fetch') || error.code === 'ECONNRESET') && attempt < retries) {
             console.log(`Retrying due to ${error.name === 'AbortError' ? 'timeout' : 'network error'}...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt * attempt)); // Exponential backoff
             continue;
           }
           
           // If it's the last attempt or a non-retryable error, throw it
-          if (error.name === 'AbortError') {
-            res.status(504).json({ error: 'The AI service is taking longer than usual. We tried multiple times but it\'s still timing out. Try again in a moment or use shorter text.' });
-          } else {
-            res.status(500).json({ error: error.message || 'Network error occurred' });
-          }
-          return null;
+          throw error;
         }
       }
+      
+      throw new Error('All retry attempts failed');
     };
 
     const llmRes = await makeApiCallWithRetry();
-    if (!llmRes) return; // Error already handled in retry function
     
     console.log('OpenRouter response status:', llmRes.status);
     const responseText = await llmRes.text();
+    
+    if (!responseText) {
+      res.status(500).json({ error: 'Empty response from AI service' });
+      return;
+    }
+    
     let llmData;
     try {
       llmData = JSON.parse(responseText);
@@ -211,6 +248,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       res.status(500).json({ error: 'Invalid response from AI service' });
       return;
     }
+    
     console.log('OpenRouter response data:', JSON.stringify(llmData, null, 2));
     
     if (!llmData.choices || !llmData.choices[0] || !llmData.choices[0].message) {
@@ -219,7 +257,7 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       return;
     }
     
-    const summary = llmData.choices[0].message.content.trim();
+    const summary = llmData.choices[0].message.content?.trim();
     console.log('LLM summary:', summary);
     
     if (!summary) {
@@ -230,8 +268,17 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     res.json({ summary });
   } catch (err: any) {
     console.error('Error in /summarize:', err);
+    
     if (!res.headersSent) {
-      res.status(500).json({ error: err.message || 'Internal server error' });
+      if (err.name === 'AbortError') {
+        res.status(504).json({ 
+          error: 'The AI service is taking longer than usual. We tried multiple times but it\'s still timing out. Try again in a moment or use shorter text.' 
+        });
+      } else {
+        res.status(500).json({ 
+          error: err.message || 'Internal server error' 
+        });
+      }
     }
   }
 });
@@ -246,12 +293,11 @@ function extractThreadId(url: string): string {
   return match[1];
 }
 
-// fetch full thread text by conversation_id
+// fetch full thread text by conversation_id with improved error handling
 async function fetchThreadTextFromTwitter(url: string): Promise<string> {
   const threadId = extractThreadId(url);
   
   try {
-    // Try multiple approaches to get Twitter content
     let content = '';
     
     try {
@@ -278,9 +324,11 @@ async function fetchThreadTextFromTwitter(url: string): Promise<string> {
           
           if (tweets.length > 0) {
             // Sort tweets chronologically and combine
-            const sorted = tweets.sort((a, b) =>
-              new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
-            );
+            const sorted = tweets.sort((a, b) => {
+              const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+              const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+              return dateA - dateB;
+            });
             
             content = sorted.map((t, index) => `${index + 1}. ${t.text}`).join('\n\n');
           }
@@ -293,8 +341,24 @@ async function fetchThreadTextFromTwitter(url: string): Promise<string> {
       }
     } catch (apiError) {
       console.error('Twitter API error:', apiError);
-      // Fall back to a generic message that indicates the URL was provided
-      throw new Error(`Unable to fetch Twitter content from ${url}. The link may be private, deleted, or require authentication. Please copy and paste the text content directly instead.`);
+      
+      // Provide more specific error messages based on the error type
+      if (apiError && typeof apiError === 'object' && 'code' in apiError) {
+        switch ((apiError as any).code) {
+          case 401:
+            throw new Error('Twitter API authentication failed. Please check your API credentials.');
+          case 403:
+            throw new Error('Tweet is private, protected, or access is forbidden.');
+          case 404:
+            throw new Error('Tweet not found or has been deleted.');
+          case 429:
+            throw new Error('Twitter API rate limit exceeded. Please try again later.');
+          default:
+            throw new Error(`Twitter API error (${(apiError as any).code}). The link may be private, deleted, or require authentication.`);
+        }
+      }
+      
+      throw new Error(`Unable to fetch Twitter content from ${url}. The link may be private, deleted, or require authentication.`);
     }
     
     throw new Error('No content could be retrieved from the Twitter URL');
@@ -304,9 +368,9 @@ async function fetchThreadTextFromTwitter(url: string): Promise<string> {
   }
 }
 
-// generate appropriate prompt based on tone
+// generate appropriate prompt based on tone with improved instructions
 function getPromptForTone(tone: string, length: string, content: string, isTwitterContent: boolean = false): string {
-  const baseInstruction = "Write like a real human who actually understands this stuff. No corporate speak, no robotic responses. Be conversational, relatable, and authentic. Use natural language, contractions, and explain things like you're talking to a friend. CRITICAL: Keep all important keywords, names, technical terms, numbers, and key details from the original - but explain them in human terms when needed. Never ask questions or request clarification.";
+  const baseInstruction = "Write like a real human who actually understands this stuff. No corporate speak, no robotic responses. Be conversational, relatable, and authentic. Use natural language, contractions, and explain things like you're talking to a friend. CRITICAL: Keep all important keywords, names, technical terms, numbers, and key details from the original - but explain them in human terms when needed. Never ask questions or request clarification. Provide only the summary without any introductory phrases.";
   
   const twitterContext = isTwitterContent ? 
     "This is Twitter/X content. Pull out the main points and make them digestible. Keep all the important stuff - names, numbers, technical terms - but make it actually readable. " : 
@@ -332,9 +396,23 @@ function getPromptForTone(tone: string, length: string, content: string, isTwitt
       return `${twitterContext}Write this as ${length} with a ${tone} tone that feels authentic and human. Don't sound like a robot or use corporate speak. Keep all the important keywords, names, technical terms, numbers, and key details from the original but make it actually engaging to read. ${baseInstruction}\n\n${content}`;
   }
 }
+
 // serve UI at root
 app.get('/', (_req: Request, res: Response): void => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Health check endpoint
+app.get('/health', (_req: Request, res: Response): void => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Error handling middleware
+app.use((err: any, req: Request, res: Response, next: any) => {
+  console.error('Unhandled error:', err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 app.listen(PORT, (): void => console.log(`thread summarizer running on port ${PORT}`));
