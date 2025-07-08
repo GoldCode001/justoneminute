@@ -44,35 +44,39 @@
     
     .sidebar-toggle {
       position: fixed;
-      top: 20px;
+      top: 50%;
       left: 20px;
+      transform: translateY(-50%);
       z-index: 1001;
       background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
       color: #0a0a0a;
       border: none;
-      border-radius: 12px;
-      padding: 12px 16px;
+      border-radius: 0 12px 12px 0;
+      padding: 16px 12px;
       font-size: 1.1em;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
       user-select: none;
-      min-width: 120px;
+      min-width: 60px;
       justify-content: center;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
     }
     
     .sidebar-toggle:hover {
-      transform: translateY(-2px);
+      transform: translateY(-50%) translateX(2px);
       box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
       background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
     }
     
     .sidebar-toggle:active {
-      transform: translateY(0);
+      transform: translateY(-50%) translateX(0);
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
     }
     
