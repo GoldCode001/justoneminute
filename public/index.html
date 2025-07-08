@@ -709,7 +709,25 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threadUrl, rawText, length, tone })
       });
-      const data = await res.json();
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Server error (${res.status}): ${errorText}`);
+      }
+      
+      const responseText = await res.text();
+      if (!responseText) {
+        throw new Error('Empty response from server');
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', responseText);
+        throw new Error('Invalid response format from server');
+      }
+      
       if (data.error) throw new Error(data.error);
       summaryDisplay.innerHTML = formatSummary(data.summary);
       summaryDisplay.classList.remove('loading');

@@ -46,6 +46,9 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
   const { threadUrl, rawText, length, tone } = req.body as { threadUrl?: string; rawText?: string; length: string; tone: string };
   
   try {
+    // Set proper headers for JSON response
+    res.setHeader('Content-Type', 'application/json');
+    
     let threadText: string;
     if (threadUrl && /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(threadUrl)) {
       threadText = await fetchThreadTextFromTwitter(threadUrl);
@@ -75,30 +78,43 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
     if (!llmRes.ok) {
       const errText = await llmRes.text();
       console.error('OpenRouter API error:', errText);
-      throw new Error(`OpenRouter API error (${llmRes.status}): ${errText || 'LLM summarization failed'}`);
+      res.status(500).json({ error: `OpenRouter API error (${llmRes.status}): ${errText || 'LLM summarization failed'}` });
+      return;
     }
 
 
     console.log('OpenRouter response status:', llmRes.status);
-    const llmData = await llmRes.json();
+    const responseText = await llmRes.text();
+    let llmData;
+    try {
+      llmData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse OpenRouter response:', responseText);
+      res.status(500).json({ error: 'Invalid response from AI service' });
+      return;
+    }
     console.log('OpenRouter response data:', JSON.stringify(llmData, null, 2));
     
     if (!llmData.choices || !llmData.choices[0] || !llmData.choices[0].message) {
       console.error('Invalid response structure from OpenRouter:', llmData);
-      throw new Error('Invalid response from AI service');
+      res.status(500).json({ error: 'Invalid response structure from AI service' });
+      return;
     }
     
     const summary = llmData.choices[0].message.content.trim();
     console.log('LLM summary:', summary);
     
     if (!summary) {
-      throw new Error('Empty summary received from AI service');
+      res.status(500).json({ error: 'Empty summary received from AI service' });
+      return;
     }
     
     res.json({ summary });
   } catch (err: any) {
     console.error('Error in /summarize:', err);
-    res.status(500).json({ error: err.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message || 'Internal server error' });
+    }
   }
 });
 
