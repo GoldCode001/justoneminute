@@ -24,11 +24,8 @@
   },
 
   "scripts": {
-    // install vite locally (but don’t save it to package.json)
     "prebuild": "npm install vite --no-save",
-    // then run the build
     "build": "npx vite build",
-    // your other scripts…
     "start": "node dist/server.js",
     "dev": "npx tsc && node dist/server.js"
   }
