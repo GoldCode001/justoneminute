@@ -5,65 +5,23 @@
   <title>just one minute</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-      color: #f5f5f5;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .header {
-      position: fixed; top: 0; left: 0; right: 0;
-      height: 60px;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-      border-bottom: 2px solid #ffd700;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 3000;
-      box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
-    }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); color: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); border-bottom: 2px solid #ffd700; display: flex; align-items: center; justify-content: center; z-index: 3000; box-shadow: 0 2px 12px rgba(255,215,0,0.3); }
     .header-text { color: #ffd700; font-size: 1.1em; font-weight: 600; text-decoration: none; transition: all 0.3s ease; }
     .header-text:hover { color: #ffed4e; }
-    .footer {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      height: 50px;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-      border-top: 1px solid #2a2a2a;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 3000;
-    }
+    .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); border-top: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: center; z-index: 3000; }
     .footer-text { color: #888; font-size: 0.9em; font-weight: 500; }
 
-    .app-layout {
-      display: flex;
-      min-height: calc(100vh - 110px);
-      padding-top: 60px;
-      padding-bottom: 50px;
-    }
-    .sidebar {
-      width: 320px;
-      background: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%);
-      border-right: 2px solid #2a2a2a;
-      display: flex; flex-direction: column;
-      min-height: calc(100vh - 110px);
-      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-      transform: translateX(0);
-      z-index: 2;
-    }
-    .sidebar-header {
-      padding: 24px 20px 16px;
-      border-bottom: 1px solid #2a2a2a;
-      background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
-    }
+    .app-layout { display: flex; min-height: calc(100vh - 110px); padding-top: 60px; padding-bottom: 50px; }
+    .sidebar { width: 320px; background: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%); border-right: 2px solid #2a2a2a; display: flex; flex-direction: column; min-height: calc(100vh - 110px); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); transform: translateX(0); z-index: 2; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-header { padding: 24px 20px 16px; border-bottom: 1px solid #2a2a2a; background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%); }
     .sidebar h2 { font-size: 1.4em; color: #ffd700; }
     .history-content { flex: 1; overflow-y: auto; padding: 16px 20px; }
     .history-content::-webkit-scrollbar { width: 8px; }
     .history-content::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%); border-radius: 4px; }
 
-    .main-content {
-      flex: 1;
-      display: flex; justify-content: center; align-items: flex-start;
-      overflow-y: auto;
-      padding: 0 40px;
-    }
+    .main-content { flex: 1; display: flex; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 0 40px; }
 
     @media (max-width: 900px) {
       .sidebar { width: 240px; }
@@ -71,21 +29,9 @@
     }
     @media (max-width: 768px) {
       .app-layout { flex-direction: column; }
-      .sidebar {
-        position: fixed; top: 60px; left: 0;
-        width: 80vw; max-width: 340px;
-        height: calc(100vh - 110px);
-        transform: translateX(-100%);
-        box-shadow: 6px 0 16px rgba(0,0,0,0.6);
-      }
+      .sidebar { position: fixed; top: 60px; left: 0; width: 80vw; max-width: 340px; height: calc(100vh - 110px); transform: translateX(-100%); box-shadow: 6px 0 16px rgba(0,0,0,0.6); }
       .sidebar.open { transform: translateX(0); }
-      .sidebar-toggle {
-        display: flex; position: fixed; top: 72px; left: 10px;
-        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-        padding: 14px 8px; border-radius: 0 12px 12px 0;
-        font-size: 1.2em; font-weight: 700; cursor: pointer;
-        z-index: 2200;
-      }
+      .sidebar-toggle { display: flex; position: fixed; top: 72px; left: 10px; z-index: 2200; background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #0a0a0a; border: none; border-radius: 0 12px 12px 0; padding: 14px 8px; font-size: 1.2em; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(255,215,0,0.3); align-items: center; }
       .sidebar-toggle.open { left: calc(80vw + 8px); }
       .main-content { padding: 0 4vw; }
     }
@@ -93,10 +39,21 @@
       .sidebar { width: 90vw; max-width: 96vw; }
       .sidebar-toggle.open { left: calc(90vw + 8px); }
     }
-    /* keep your input, button, summary, history item styles unchanged below */
+
+    /* Inputs, buttons, summary, history item styles */
     .container { width: 100%; max-width: 600px; margin: 40px auto; display: flex; flex-direction: column; align-items: center; }
     h1 { font-size: 2.2em; font-weight: 700; margin-bottom: 32px; background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
-    input, select, textarea, button, .summary-container, .summary-display, .copy-btn, .error, .history-item, .history-meta, .history-preview, .clear-history { /* include your existing detailed styles here */ }
+    input, select { width: 100%; padding: 14px 18px; margin: 12px 0; background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%); color: #f5f5f5; border: 2px solid #2a2a2a; border-radius: 14px; font-size: 1em; }
+    textarea { width: 100%; padding: 14px 18px; background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%); color: #f5f5f5; border: 2px solid #2a2a2a; border-radius: 14px; margin: 12px 0; font-size: 1em; resize: vertical; min-height: 100px; }
+    button { width: 100%; padding: 16px 22px; margin-top: 20px; background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%); color: #0a0a0a; font-size: 1.1em; border: none; border-radius: 16px; cursor: pointer; }
+    .summary-container { margin-top: 32px; background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%); border: 2px solid #2a2a2a; border-radius: 16px; padding: 20px; }
+    .summary-display { width: 100%; min-height: 150px; background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%); color: #f5f5f5; border: 2px solid #2a2a2a; border-radius: 14px; padding: 18px; white-space: pre-wrap; }
+    .copy-btn { padding: 10px 20px; margin-top: 16px; background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%); color: #ffd700; border-radius: 10px; }
+    .error { background: linear-gradient(135deg, #2a0a0a 0%, #3a1515 100%); padding: 16px; border-radius: 16px; margin-top: 20px; color: #ff6b6b; }
+    .history-item { background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); padding: 16px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; }
+    .history-meta { font-size: 0.85em; color: #ffd700; margin-bottom: 8px; }
+    .history-preview { font-size: 0.95em; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; color: #e5e5e5; }
+    .clear-history { padding: 12px 16px; margin-top: 16px; background: linear-gradient(135deg, #2a0a0a 0%, #3a1515 100%); color: #ff6b6b; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -105,35 +62,50 @@
   </div>
   <button id="sidebarToggle" class="sidebar-toggle"><span id="toggleIcon">📜</span></button>
   <div class="app-layout">
-    <div class="sidebar" id="sidebar">
+    <div id="sidebar" class="sidebar">
       <div class="sidebar-header"><h2>History</h2></div>
-      <div class="history-content"><div id="historyList"></div><button id="clearHistoryBtn" class="clear-history">Clear History</button></div>
+      <div class="history-content">
+        <div id="historyList"></div>
+        <button id="clearHistoryBtn" class="clear-history">Clear History</button>
+      </div>
     </div>
     <div class="main-content">
       <div class="container">
         <h1>...just one minute</h1>
         <input id="threadUrl" type="text" placeholder="Paste Twitter thread link (optional)">
         <textarea id="rawText" rows="4" placeholder="Paste any text to summarize"></textarea>
-        <select id="length"><option>1 line</option><option selected>3 sentences</option><option>bullet list</option></select>
-        <select id="tone"><option>simple</option><option>professional</option><option>conversational</option><option>shitpost</option><option>infographics</option></select>
+        <select id="length">
+          <option value="1 line">1 line</option>
+          <option value="3 sentences" selected>3 sentences</option>
+          <option value="bullet list">bullet list</option>
+        </select>
+        <select id="tone">
+          <option value="simple">simple</option>
+          <option value="professional">professional</option>
+          <option value="conversational">conversational</option>
+          <option value="shitpost">shitpost</option>
+          <option value="infographics">infographics</option>
+        </select>
         <button id="summarizeBtn">summarize</button>
         <div id="error" class="error"></div>
-        <div class="summary-container" id="summaryContainer" style="display:none;"><div id="summaryDisplay" class="summary-display"></div><button id="copyBtn" class="copy-btn">Copy to Clipboard</button></div>
+        <div id="summaryContainer" class="summary-container" style="display:none;">
+          <div id="summaryDisplay" class="summary-display"></div>
+          <button id="copyBtn" class="copy-btn">Copy to Clipboard</button>
+        </div>
       </div>
     </div>
   </div>
   <div class="footer"><div class="footer-text">...made with 🖤 by goldman</div></div>
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebarToggle');
-    const icon = document.getElementById('toggleIcon');
-    let open=false;
-    function updateSidebar(){ if(window.innerWidth>768){ sidebar.classList.add('open'); toggle.style.display='none'; } else { sidebar.classList.remove('open'); toggle.style.display='flex'; }}
-    window.addEventListener('resize', updateSidebar);
-    window.addEventListener('DOMContentLoaded', updateSidebar);
-    toggle.addEventListener('click',(e)=>{ e.stopPropagation(); open=!open; sidebar.classList.toggle('open'); toggle.classList.toggle('open'); icon.textContent = open? '✕':'📜'; });
-    document.addEventListener('click',(e)=>{ if(open && !sidebar.contains(e.target)&&!toggle.contains(e.target)){ open=false; sidebar.classList.remove('open'); toggle.classList.remove('open'); icon.textContent='📜'; }});
-    // rest of your JS for summarize, history, copy, etc.
-  </script>
-</body>
-</html>
+    console.log('script loaded');
+    const btn = document.getElementById('summarizeBtn');
+    const errorEl = document.getElementById('error');
+    const summaryContainer = document.getElementById('summaryContainer');
+    const summaryDisplay = document.getElementById('summaryDisplay');
+    const copyBtn = document.getElementById('copyBtn');
+    const threadInput = document.getElementById('threadUrl');
+    const rawTextInput = document.getElementById('rawText');
+    const lengthSelect = document.getElementById('length');
+    const toneSelect = document.getElementById('tone');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn
