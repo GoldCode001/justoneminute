@@ -965,7 +965,11 @@
 
   btn?.addEventListener('click', async () => {
     if (!errorEl || !summaryDisplay || !summaryContainer) return;
+    
+    // Clear any previous errors
     errorEl.innerHTML = '';
+    errorEl.style.display = 'none';
+    
     summaryDisplay.innerHTML = 'Loading...';
     summaryDisplay.classList.add('loading');
     summaryContainer.style.display = 'block';
@@ -976,7 +980,7 @@
     const tone = toneSelect instanceof HTMLSelectElement ? toneSelect.value : '';
 
     if (!rawText) {
-      showError('No Content Provided', 'Please paste some text to summarize.', 'Try copying and pasting an article, blog post, or any long-form content you\'d like summarized.');
+      showError('No Content Provided', 'Please paste some text to summarize.', 'Try copying and pasting an article, blog post, Twitter thread, or any long-form content you\'d like summarized.');
       summaryDisplay.innerHTML = '';
       summaryDisplay.classList.remove('loading');
       summaryContainer.style.display = 'none';
@@ -985,16 +989,13 @@
 
     try {
       const res = await fetch('/.netlify/functions/summarize', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threadUrl, rawText, length, tone })
       });
       
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Server error (${res.status}): ${errorText}`);
-      }
-      
       const responseText = await res.text();
+      
       if (!responseText) {
         throw new Error('Empty response from server');
       }
@@ -1004,10 +1005,23 @@
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error('Failed to parse JSON response:', responseText);
-        throw new Error('Invalid response format from server');
+        throw new Error('The server returned an invalid response. Please try again.');
       }
       
-      if (data.error) throw new Error(data.error);
+      // Check if the response indicates an error (even with 200 status)
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      // Check for non-200 status codes
+      if (!res.ok) {
+        throw new Error(data.error || `Server error (${res.status})`);
+      }
+      
+      if (!data.summary) {
+        throw new Error('No summary was generated. Please try again with different content.');
+      }
+      
       summaryDisplay.innerHTML = formatSummary(data.summary);
       summaryDisplay.classList.remove('loading');
       
@@ -1028,6 +1042,7 @@
   function showError(title, message, suggestion = '') {
     if (!errorEl) return;
     
+    errorEl.style.display = 'block';
     errorEl.innerHTML = `
       <div class="error-content">
         <div class="error-title">${title}</div>
@@ -1040,35 +1055,41 @@
   function handleError(err) {
     const message = err.message || 'An unexpected error occurred';
     
-    if (message.includes('timeout') || message.includes('taking too long')) {
+    if (message.includes('timeout') || message.includes('taking too long') || message.includes('Request timeout')) {
       showError(
         'Request Timeout',
         'The AI service is taking longer than usual to respond.',
         'This usually happens with very long text. Try using shorter content or wait a moment and try again.'
       );
-    } else if (message.includes('rate limit') || message.includes('429')) {
+    } else if (message.includes('rate limit') || message.includes('Too many requests')) {
       showError(
         'Too Many Requests',
         'We\'re receiving a lot of requests right now.',
         'Please wait a moment and try again. The service will be available shortly.'
       );
-    } else if (message.includes('network') || message.includes('fetch')) {
+    } else if (message.includes('network') || message.includes('Network error') || message.includes('fetch')) {
       showError(
         'Connection Issue',
         'Unable to connect to the AI service.',
         'Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable.'
       );
-    } else if (message.includes('Invalid response') || message.includes('Empty response')) {
+    } else if (message.includes('Invalid response') || message.includes('Empty response') || message.includes('invalid response')) {
       showError(
         'Service Error',
         'The AI service returned an unexpected response.',
         'This is usually temporary. Please try again with the same or different content.'
       );
-    } else if (message.includes('Server error')) {
+    } else if (message.includes('Server error') || message.includes('Internal server error')) {
       showError(
         'Server Issue',
         'Our servers are experiencing some difficulties.',
         'We\'re working to resolve this. Please try again in a few minutes.'
+      );
+    } else if (message.includes('No summary was generated')) {
+      showError(
+        'Generation Failed',
+        'Unable to generate a summary for this content.',
+        'Try using different text or a different tone/length combination.'
       );
     } else {
       showError(

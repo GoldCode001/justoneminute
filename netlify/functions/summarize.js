@@ -406,7 +406,7 @@ exports.handler = async (event, context) => {
     await Promise.all([
       logToneUsage(tone),
       logSummarizationRequest(tone, length, contentType, true)
-    ]);
+    ]).catch(err => console.log('Analytics logging failed:', err));
     
     return {
       statusCode: 200,
@@ -418,7 +418,7 @@ exports.handler = async (event, context) => {
     
     // Log failed summarization attempt
     try {
-      const { tone, length } = JSON.parse(event.body);
+      const { tone, length } = JSON.parse(event.body || '{}');
       const contentType = 'unknown';
       await logSummarizationRequest(tone || 'unknown', length || 'unknown', contentType, false);
     } catch (logError) {
@@ -428,18 +428,33 @@ exports.handler = async (event, context) => {
     // Handle timeout specifically
     if (err.message === 'Request timeout') {
       return {
-        statusCode: 504,
+        statusCode: 408,
         headers,
         body: JSON.stringify({ 
-          error: 'The AI service is taking too long to respond. This usually happens with very long text. Try using shorter text or try again in a moment.' 
+          error: 'Request timeout - the AI service is taking too long to respond. This usually happens with very long text. Try using shorter content or try again in a moment.' 
         })
       };
     }
     
+    // Handle different error types more gracefully
+    let statusCode = 500;
+    let errorMessage = err.message || 'Internal server error';
+    
+    if (err.message && err.message.includes('rate limit')) {
+      statusCode = 429;
+      errorMessage = 'Too many requests - please wait a moment and try again.';
+    } else if (err.message && err.message.includes('network')) {
+      statusCode = 503;
+      errorMessage = 'Network error - unable to connect to AI service. Please try again.';
+    } else if (err.message && err.message.includes('Invalid response')) {
+      statusCode = 502;
+      errorMessage = 'AI service returned an invalid response. Please try again.';
+    }
+    
     return {
-      statusCode: 500,
+      statusCode,
       headers,
-      body: JSON.stringify({ error: err.message || 'Internal server error' })
+      body: JSON.stringify({ error: errorMessage })
     };
   }
 };
