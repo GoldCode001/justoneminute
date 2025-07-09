@@ -525,17 +525,17 @@
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
-      transition: all 0.1s ease-out;
+      transition: opacity 0.2s ease-out;
       opacity: 0;
-      width: 300px;
-      height: 300px;
-      filter: blur(20px);
+      width: 80px;
+      height: 80px;
+      filter: blur(12px);
       background: transparent;
     }
     
     .aura.active {
       opacity: 1;
-      animation: fluidFlow 3s ease-in-out infinite;
+      animation: fluidFlow 2s ease-in-out infinite;
     }
     
     .aura::before {
@@ -545,12 +545,11 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 30% 40%, rgba(255, 215, 0, 0.6) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 60%, rgba(255, 237, 78, 0.5) 0%, transparent 50%),
-                  radial-gradient(circle at 50% 30%, rgba(255, 215, 0, 0.4) 0%, transparent 60%),
-                  radial-gradient(circle at 20% 70%, rgba(255, 237, 78, 0.3) 0%, transparent 40%);
-      filter: blur(15px);
-      animation: fluidShift 4s ease-in-out infinite;
+      background: radial-gradient(ellipse 60% 40% at 45% 35%, rgba(255, 215, 0, 0.8) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 60% at 55% 65%, rgba(255, 237, 78, 0.6) 0%, transparent 80%),
+                  radial-gradient(ellipse 50% 30% at 30% 50%, rgba(255, 215, 0, 0.5) 0%, transparent 90%);
+      filter: blur(8px);
+      animation: fluidShift 3s ease-in-out infinite;
     }
     
     .aura::after {
@@ -560,58 +559,52 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 60% 20%, rgba(255, 215, 0, 0.4) 0%, transparent 40%),
-                  radial-gradient(circle at 40% 80%, rgba(255, 237, 78, 0.3) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 50%, rgba(255, 215, 0, 0.2) 0%, transparent 60%);
-      filter: blur(25px);
-      animation: fluidShift 5s ease-in-out infinite reverse;
+      background: radial-gradient(ellipse 30% 70% at 65% 25%, rgba(255, 215, 0, 0.4) 0%, transparent 85%),
+                  radial-gradient(ellipse 70% 30% at 35% 75%, rgba(255, 237, 78, 0.3) 0%, transparent 90%);
+      filter: blur(15px);
+      animation: fluidShift 4s ease-in-out infinite reverse;
     }
     
     @keyframes fluidFlow {
       0% { 
-        transform: translate(-50%, -50%) scale(0.8);
-        filter: blur(18px);
+        transform: translate(-50%, -50%) scale(0.9);
+        filter: blur(10px);
       }
       50% { 
-        transform: translate(-50%, -50%) scale(1.2);
-        filter: blur(25px);
+        transform: translate(-50%, -50%) scale(1.1);
+        filter: blur(14px);
       }
       100% { 
-        transform: translate(-50%, -50%) scale(0.8);
-        filter: blur(18px);
+        transform: translate(-50%, -50%) scale(0.9);
+        filter: blur(10px);
       }
     }
     
     @keyframes fluidShift {
       0% { 
-        background: radial-gradient(circle at 30% 40%, rgba(255, 215, 0, 0.6) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 60%, rgba(255, 237, 78, 0.5) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 30%, rgba(255, 215, 0, 0.4) 0%, transparent 60%),
-                    radial-gradient(circle at 20% 70%, rgba(255, 237, 78, 0.3) 0%, transparent 40%);
+        background: radial-gradient(ellipse 60% 40% at 45% 35%, rgba(255, 215, 0, 0.8) 0%, transparent 70%),
+                    radial-gradient(ellipse 40% 60% at 55% 65%, rgba(255, 237, 78, 0.6) 0%, transparent 80%),
+                    radial-gradient(ellipse 50% 30% at 30% 50%, rgba(255, 215, 0, 0.5) 0%, transparent 90%);
       }
       25% {
-        background: radial-gradient(circle at 60% 30%, rgba(255, 215, 0, 0.5) 0%, transparent 60%),
-                    radial-gradient(circle at 40% 70%, rgba(255, 237, 78, 0.6) 0%, transparent 40%),
-                    radial-gradient(circle at 80% 50%, rgba(255, 215, 0, 0.3) 0%, transparent 70%),
-                    radial-gradient(circle at 10% 20%, rgba(255, 237, 78, 0.4) 0%, transparent 50%);
+        background: radial-gradient(ellipse 70% 30% at 35% 60%, rgba(255, 215, 0, 0.7) 0%, transparent 75%),
+                    radial-gradient(ellipse 30% 80% at 65% 40%, rgba(255, 237, 78, 0.5) 0%, transparent 85%),
+                    radial-gradient(ellipse 40% 50% at 50% 20%, rgba(255, 215, 0, 0.6) 0%, transparent 80%);
       }
       50% {
-        background: radial-gradient(circle at 20% 60%, rgba(255, 215, 0, 0.4) 0%, transparent 70%),
-                    radial-gradient(circle at 80% 40%, rgba(255, 237, 78, 0.5) 0%, transparent 50%),
-                    radial-gradient(circle at 40% 20%, rgba(255, 215, 0, 0.6) 0%, transparent 40%),
-                    radial-gradient(circle at 60% 80%, rgba(255, 237, 78, 0.3) 0%, transparent 60%);
+        background: radial-gradient(ellipse 50% 70% at 60% 30%, rgba(255, 215, 0, 0.6) 0%, transparent 80%),
+                    radial-gradient(ellipse 80% 40% at 40% 70%, rgba(255, 237, 78, 0.7) 0%, transparent 75%),
+                    radial-gradient(ellipse 30% 60% at 70% 50%, rgba(255, 215, 0, 0.4) 0%, transparent 90%);
       }
       75% {
-        background: radial-gradient(circle at 70% 70%, rgba(255, 215, 0, 0.5) 0%, transparent 50%),
-                    radial-gradient(circle at 30% 20%, rgba(255, 237, 78, 0.4) 0%, transparent 60%),
-                    radial-gradient(circle at 90% 30%, rgba(255, 215, 0, 0.3) 0%, transparent 70%),
-                    radial-gradient(circle at 50% 90%, rgba(255, 237, 78, 0.6) 0%, transparent 40%);
+        background: radial-gradient(ellipse 40% 50% at 25% 45%, rgba(255, 215, 0, 0.8) 0%, transparent 70%),
+                    radial-gradient(ellipse 60% 70% at 75% 55%, rgba(255, 237, 78, 0.4) 0%, transparent 85%),
+                    radial-gradient(ellipse 80% 30% at 50% 75%, rgba(255, 215, 0, 0.5) 0%, transparent 80%);
       }
       100% { 
-        background: radial-gradient(circle at 30% 40%, rgba(255, 215, 0, 0.6) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 60%, rgba(255, 237, 78, 0.5) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 30%, rgba(255, 215, 0, 0.4) 0%, transparent 60%),
-                    radial-gradient(circle at 20% 70%, rgba(255, 237, 78, 0.3) 0%, transparent 40%);
+        background: radial-gradient(ellipse 60% 40% at 45% 35%, rgba(255, 215, 0, 0.8) 0%, transparent 70%),
+                    radial-gradient(ellipse 40% 60% at 55% 65%, rgba(255, 237, 78, 0.6) 0%, transparent 80%),
+                    radial-gradient(ellipse 50% 30% at 30% 50%, rgba(255, 215, 0, 0.5) 0%, transparent 90%);
       }
     }
     
