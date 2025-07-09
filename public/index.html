@@ -740,10 +740,9 @@
   
   // Touch events for mobile
   document.addEventListener('touchstart', (e) => {
-    e.preventDefault();
     const touch = e.touches[0];
     showAura(touch.clientX, touch.clientY);
-  }, { passive: false });
+  }, { passive: true });
   
   document.addEventListener('touchmove', (e) => {
     if (isInteracting && e.touches.length > 0) {
@@ -755,7 +754,7 @@
   document.addEventListener('touchend', () => {
     // Add a small delay before hiding to create a smooth transition
     auraTimeout = setTimeout(hideAura, 200);
-  });
+  }, { passive: true });
   
   // Handle mouse leave to hide aura when cursor leaves the window
   document.addEventListener('mouseleave', hideAura);
