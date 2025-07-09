@@ -204,6 +204,19 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
     
+    input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+      color: #666;
+    }
+    
+    input:disabled:hover {
+      transform: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-color: #2a2a2a;
+    }
+    
     input:focus, select:focus {
       outline: none;
       border-color: #ffd700;
@@ -494,6 +507,14 @@
       color: #888;
       font-size: 0.9em;
       font-weight: 500;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .footer-text:hover {
+      color: #ffd700;
+      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+      transform: translateY(-1px);
     }
     
     /* Adjust main content to account for header and footer */
@@ -525,7 +546,7 @@
   <div class="main-content">
     <div class="container">
       <h1>...just one minute</h1>
-      <input id="threadUrl" type="text" placeholder="Paste Twitter thread link (optional)">
+      <input id="threadUrl" type="text" placeholder="Paste Twitter thread link (optional)" disabled>
       <textarea id="rawText" placeholder="Paste any text to summarize (Twitter threads, articles, posts, etc.)" rows="4"></textarea>
       <select id="length">
         <option value="1 line">1 line</option>
@@ -549,7 +570,7 @@
   </div>
   
   <div class="footer">
-    <div class="footer-text">...made with 🖤 by goldman</div>
+    <a href="https://x.com/goldmancreates" target="_blank" class="footer-text">...made with 🖤 by goldman</a>
   </div>
   
 <script>
@@ -710,13 +731,13 @@
     summaryDisplay.classList.add('loading');
     summaryContainer.style.display = 'block';
 
-    const threadUrl = threadInput instanceof HTMLInputElement ? threadInput.value.trim() : '';
+    const threadUrl = ''; // Disabled input, always empty
     const rawText = rawTextInput instanceof HTMLTextAreaElement ? rawTextInput.value.trim() : '';
     const length = lengthSelect instanceof HTMLSelectElement ? lengthSelect.value : '';
     const tone = toneSelect instanceof HTMLSelectElement ? toneSelect.value : '';
 
-    if (!threadUrl && !rawText) {
-      errorEl.textContent = 'Enter a Twitter link or paste some text.';
+    if (!rawText) {
+      errorEl.textContent = 'Please paste some text to summarize.';
       summaryDisplay.innerHTML = '';
       summaryDisplay.classList.remove('loading');
       summaryContainer.style.display = 'none';
