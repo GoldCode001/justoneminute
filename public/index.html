@@ -518,6 +518,52 @@
     }
     
     /* Adjust main content to account for header and footer */
+    
+    /* Interactive Aura Effect */
+    .aura {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 237, 78, 0.2) 30%, rgba(255, 215, 0, 0.1) 60%, transparent 100%);
+      transform: translate(-50%, -50%);
+      transition: all 0.1s ease-out;
+      opacity: 0;
+      width: 100px;
+      height: 100px;
+      animation: auraGlow 2s ease-in-out infinite alternate;
+    }
+    
+    .aura.active {
+      opacity: 1;
+      animation: auraPulse 1.5s ease-in-out infinite, auraGlow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes auraPulse {
+      0% { transform: translate(-50%, -50%) scale(0.8); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+      100% { transform: translate(-50%, -50%) scale(0.8); }
+    }
+    
+    @keyframes auraGlow {
+      0% { 
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, rgba(255, 237, 78, 0.25) 30%, rgba(255, 215, 0, 0.15) 60%, transparent 100%);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3), 0 0 60px rgba(255, 215, 0, 0.2);
+      }
+      100% { 
+        background: radial-gradient(circle, rgba(255, 237, 78, 0.5) 0%, rgba(255, 215, 0, 0.3) 30%, rgba(255, 237, 78, 0.2) 60%, transparent 100%);
+        box-shadow: 0 0 40px rgba(255, 237, 78, 0.4), 0 0 80px rgba(255, 215, 0, 0.3);
+      }
+    }
+    
+    /* Enhance existing elements with subtle glow on interaction */
+    button:active, input:active, textarea:active, select:active {
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    
+    .history-item:active {
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3), 0 8px 24px rgba(255, 215, 0, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -525,6 +571,10 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3ZHXFFM"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
+  
+  <!-- Interactive Aura Element -->
+  <div id="aura" class="aura"></div>
+  
   <div class="header">
     <a href="https://goldmancreates.substack.com" target="_blank" class="header-text">
       join my newsletter -- goldmancreates.substack.com
@@ -587,6 +637,76 @@
   const copyBtn = document.getElementById('copyBtn');
   const historyList = document.getElementById('historyList');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  
+  // Interactive Aura Effect
+  const aura = document.getElementById('aura');
+  let isInteracting = false;
+  let auraTimeout;
+  
+  function updateAuraPosition(x, y) {
+    if (aura) {
+      aura.style.left = x + 'px';
+      aura.style.top = y + 'px';
+    }
+  }
+  
+  function showAura(x, y) {
+    if (aura) {
+      updateAuraPosition(x, y);
+      aura.classList.add('active');
+      isInteracting = true;
+      
+      // Clear any existing timeout
+      if (auraTimeout) {
+        clearTimeout(auraTimeout);
+      }
+    }
+  }
+  
+  function hideAura() {
+    if (aura) {
+      aura.classList.remove('active');
+      isInteracting = false;
+    }
+  }
+  
+  // Mouse events for desktop
+  document.addEventListener('mousedown', (e) => {
+    showAura(e.clientX, e.clientY);
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (isInteracting) {
+      updateAuraPosition(e.clientX, e.clientY);
+    }
+  });
+  
+  document.addEventListener('mouseup', () => {
+    // Add a small delay before hiding to create a smooth transition
+    auraTimeout = setTimeout(hideAura, 150);
+  });
+  
+  // Touch events for mobile
+  document.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    showAura(touch.clientX, touch.clientY);
+  }, { passive: false });
+  
+  document.addEventListener('touchmove', (e) => {
+    if (isInteracting && e.touches.length > 0) {
+      const touch = e.touches[0];
+      updateAuraPosition(touch.clientX, touch.clientY);
+    }
+  }, { passive: true });
+  
+  document.addEventListener('touchend', () => {
+    // Add a small delay before hiding to create a smooth transition
+    auraTimeout = setTimeout(hideAura, 200);
+  });
+  
+  // Handle mouse leave to hide aura when cursor leaves the window
+  document.addEventListener('mouseleave', hideAura);
   
   // Sidebar toggle functionality
   const sidebar = document.getElementById('sidebar');
