@@ -326,7 +326,7 @@ exports.handler = async (event, context) => {
                 role: 'user', 
                 content: prompt
               }],
-              max_tokens: 300, // Increased slightly for better quality
+              max_tokens: 180, // Shortened for more concise responses
               temperature: 0.6 // Slightly lower for more consistent output
             })
           });
@@ -550,38 +550,37 @@ CRITICAL INSTRUCTIONS:
 MANDATORY REQUIREMENTS:
 1. Write like a real human - use natural language, contractions, and conversational flow
 2. Preserve ALL important names, numbers, technical terms, and key concepts from the original
-3. Write in clear, engaging language that flows naturally - NO robotic or corporate speak
+3. Keep it SHORT and punchy - get to the point quickly but naturally
 4. Ensure the summary is factually accurate and makes complete sense
-5. Use proper grammar but keep it conversational and human
+5. Use proper grammar but keep it conversational, human, and BRIEF
 6. Never ask questions or request clarification
-7. Provide only the summary content, nothing else
-8. Make it genuinely interesting to read - like a smart friend explaining it to you`;
+7. Make it genuinely interesting but CONCISE - like a smart friend giving you the quick version`;
   
   const twitterContext = isTwitterContent ? 
-    "This is Twitter/X content. Pull out the main points and make them digestible while keeping all important details. Write like you actually understand this stuff. " : 
+    "This is Twitter/X content. Pull out the main points quickly and make them digestible. " : 
     "";
   
   const bulletInstruction = length === 'bullet list' ? 
-    "Format as clean bullet points with each point on a new line. Use • or - for bullets. Make each bullet concise but complete. " : 
+    "Format as clean, SHORT bullet points. Use • or - for bullets. Make each bullet punchy and complete. " : 
     "";
   
   switch (tone) {
     case 'shitpost':
-      return `${twitterContext}${bulletInstruction}Turn this into a ${length} shitpost that's genuinely hilarious and entertaining while hitting all the main points. Use internet slang, memes, and make it funny as hell - but keep it informative and accurate. Don't be cringe about it. Keep ALL important names, numbers, and technical details but make them memeable. Write like you're roasting this content but in a way that actually explains it perfectly. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
+      return `${twitterContext}${bulletInstruction}Turn this into a SHORT ${length} shitpost that's genuinely hilarious while hitting the main points. Use internet slang and memes but keep it informative. Don't be cringe. Keep ALL important names/numbers but make them memeable. Roast it but explain it perfectly - just keep it brief and punchy. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'infographics':
-      return `${twitterContext}${bulletInstruction}Make this into ${length} that would work perfectly in an infographic. Think clean sections, key stats, and visual structure. Use emojis naturally (not overdoing it) and organize info so it's easy to scan. Keep ALL important numbers, names, and technical details but structure them visually. Write like you're designing something people actually want to read and share. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
+      return `${twitterContext}${bulletInstruction}Make this into CONCISE ${length} perfect for an infographic. Clean sections, key stats, visual structure. Use emojis naturally and organize for easy scanning. Keep ALL important numbers/names but structure them visually and briefly. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'simple':
-      return `${twitterContext}${bulletInstruction}Break this down into ${length} that anyone can understand - think "explain it like I'm smart but not an expert in this topic." Use everyday language and simple examples. Keep ALL important names, numbers, and technical stuff but explain what they actually mean in real terms. Write like you're explaining it to a curious friend who asks good questions. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
+      return `${twitterContext}${bulletInstruction}Break this down into SHORT ${length} anyone can understand. Use everyday language and simple examples. Keep ALL important names/numbers but explain what they mean in real terms quickly. Like explaining to a smart friend who wants the quick version. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'professional':
-      return `${twitterContext}${bulletInstruction}Write this as ${length} in a professional tone that doesn't sound like corporate BS. Be polished but still human - like how you'd explain it in a good meeting or email to colleagues. Keep all technical terms, names, numbers, and key details but make it business-appropriate without being stuffy or robotic. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
+      return `${twitterContext}${bulletInstruction}Write this as BRIEF ${length} in professional tone that's not corporate BS. Polished but human - like a good meeting summary. Keep all technical terms/names/numbers but make it business-appropriate and concise. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     case 'conversational':
-      return `${twitterContext}${bulletInstruction}Explain this in ${length} like you're talking to a friend over coffee. Be natural, use contractions, throw in some personality. Make it feel like a real conversation - not a presentation. Keep all important names, numbers, and technical details but explain them in a way that feels genuine and relatable. Write like you actually care about making this interesting. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
+      return `${twitterContext}${bulletInstruction}Explain this in SHORT ${length} like talking to a friend over coffee. Natural, contractions, some personality. Real conversation feel - not a presentation. Keep all important names/numbers but explain them genuinely and briefly. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
     
     default:
-      return `${twitterContext}${bulletInstruction}Write this as ${length} with a ${tone} tone that feels authentic and human. Don't sound like a robot or use corporate speak. Keep all important keywords, names, technical terms, numbers, and key details from the original but make it actually engaging to read. Write like you genuinely understand this stuff and want to share it in an interesting way. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
+      return `${twitterContext}${bulletInstruction}Write this as CONCISE ${length} with ${tone} tone that's authentic and human. No robot speak. Keep all important keywords/names/numbers but make it engaging and brief. Like you understand it and want to share it quickly but interestingly. ${baseInstruction}\n\nCONTENT TO SUMMARIZE:\n${content}`;
   }
 }
