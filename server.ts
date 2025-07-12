@@ -284,6 +284,173 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// crypto explanation endpoint
+app.post('/.netlify/functions/crypto-explain', async (req: Request, res: Response): Promise<void> => {
+  const { term } = req.body as { term: string };
+  
+  try {
+    // Set proper headers for JSON response
+    res.setHeader('Content-Type', 'application/json');
+    
+    // Input validation
+    if (!term || typeof term !== 'string' || term.trim().length === 0) {
+      res.status(400).json({ error: 'No term provided or invalid term format.' });
+      return;
+    }
+    
+    const cleanTerm = term.trim();
+    console.log('Explaining crypto term:', cleanTerm);
+    
+    // Generate prompt for crypto explanation
+    const prompt = `You are an ultra-passionate crypto expert who explains things like you're talking to your best friend. You're genuinely excited about crypto and want to share that enthusiasm while being incredibly helpful and human.
+
+Explain "${cleanTerm}" in a way that's:
+- Conversational and enthusiastic (like you're genuinely excited to explain this)
+- Easy to understand but not dumbed down
+- Includes practical examples and real-world context
+- Shows why this matters in crypto
+- Uses analogies when helpful
+- Mentions risks/benefits honestly
+- Feels like a human wrote it, not an AI
+
+Be authentic, use contractions, and let your personality shine through. Don't sound corporate or robotic. If it's a complex topic, break it down step by step but keep it engaging.
+
+Keep it comprehensive but digestible - aim for 2-4 paragraphs that really help someone understand both what it is and why they should care.`;
+
+    // Retry logic for API calls
+    const makeApiCallWithRetry = async (retries = 3): Promise<any> => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`Crypto explain API call attempt ${attempt}/${retries}`);
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+          
+          const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${requiredEnvVars.OPENROUTER_API_KEY}`, 
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://just-one-minute-goldman.netlify.app',
+              'X-Title': 'Goldman Crypto Dictionary'
+            },
+            body: JSON.stringify({
+              model: 'openai/gpt-4o-2024-11-20',
+              messages: [{ 
+                role: 'user', 
+                content: prompt
+              }],
+              max_tokens: 600,
+              temperature: 0.8
+            }),
+            signal: controller.signal as any
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!llmRes.ok) {
+            const errText = await llmRes.text();
+            console.error(`OpenRouter API error (attempt ${attempt}):`, errText);
+            
+            // If it's a 5xx error or rate limit, retry. If it's 4xx (except 429), don't retry
+            if ((llmRes.status >= 500 || llmRes.status === 429) && attempt < retries) {
+              console.log(`Retrying due to server error (${llmRes.status})...`);
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt * attempt)); // Exponential backoff
+              continue;
+            }
+            
+            throw new Error(`OpenRouter API error (${llmRes.status}): ${errText || 'Crypto explanation failed'}`);
+          }
+          
+          return llmRes;
+          
+        } catch (error: any) {
+          console.error(`Attempt ${attempt} failed:`, error);
+          
+          // If it's a timeout or network error and we have retries left, try again
+          if ((error.name === 'AbortError' || error.message?.includes('fetch') || error.code === 'ECONNRESET') && attempt < retries) {
+            console.log(`Retrying due to ${error.name === 'AbortError' ? 'timeout' : 'network error'}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt * attempt)); // Exponential backoff
+            continue;
+          }
+          
+          // If it's the last attempt or a non-retryable error, throw it
+          throw error;
+        }
+      }
+      
+      throw new Error('All retry attempts failed');
+    };
+
+    const llmRes = await makeApiCallWithRetry();
+    
+    console.log('OpenRouter response status:', llmRes.status);
+    const responseText = await llmRes.text();
+    
+    if (!responseText) {
+      res.status(500).json({ error: 'Empty response from AI service' });
+      return;
+    }
+    
+    let llmData;
+    try {
+      llmData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse OpenRouter response:', responseText);
+      res.status(500).json({ error: 'Invalid response from AI service' });
+      return;
+    }
+    
+    console.log('OpenRouter response data:', JSON.stringify(llmData, null, 2));
+    
+    if (!llmData.choices || !llmData.choices[0] || !llmData.choices[0].message) {
+      console.error('Invalid response structure from OpenRouter:', llmData);
+      res.status(500).json({ error: 'Invalid response structure from AI service' });
+      return;
+    }
+    
+    let explanation = llmData.choices[0].message.content?.trim();
+    console.log('LLM explanation:', explanation);
+    
+    if (!explanation) {
+      res.status(500).json({ error: 'Empty explanation received from AI service' });
+      return;
+    }
+    
+    // Post-process the explanation to make it more human
+    explanation = postProcessExplanation(explanation);
+    
+    res.json({ explanation });
+  } catch (err: any) {
+    console.error('Error in crypto-explain:', err);
+    
+    if (!res.headersSent) {
+      if (err.name === 'AbortError') {
+        res.status(504).json({ 
+          error: 'The AI service is taking longer than usual. We tried multiple times but it\'s still timing out. Try again in a moment or try a simpler term.' 
+        });
+      } else {
+        res.status(500).json({ 
+          error: err.message || 'Internal server error' 
+        });
+      }
+    }
+  }
+});
+
+// Helper function to post-process explanations
+function postProcessExplanation(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>')
+    .replace(/<p><\/p>/g, '')
+    .trim();
+}
+
 // Static files after API routes
 app.use(express.static('public'));
 
