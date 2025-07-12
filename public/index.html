@@ -561,7 +561,6 @@
       width: 80px;
       height: 80px;
       filter: blur(12px);
-      background: transparent;
     }
     
     .aura.active {
@@ -569,8 +568,8 @@
       animation: fluidFlow 2s ease-in-out infinite;
     }
     
-    /* Golden aura for crypto dictionary page */
-    .crypto-page .aura::before {
+    /* Default golden aura */
+    .aura::before {
       content: '';
       position: absolute;
       top: 0;
@@ -584,7 +583,7 @@
       animation: fluidShift 3s ease-in-out infinite;
     }
     
-    .crypto-page .aura::after {
+    .aura::after {
       content: '';
       position: absolute;
       top: 0;
@@ -598,7 +597,7 @@
     }
     
     /* Purple aura for summarizer page */
-    .summarize-page .aura::before {
+    .aura.purple::before {
       content: '';
       position: absolute;
       top: 0;
@@ -612,7 +611,7 @@
       animation: fluidShiftPurple 3s ease-in-out infinite;
     }
     
-    .summarize-page .aura::after {
+    .aura.purple::after {
       content: '';
       position: absolute;
       top: 0;
@@ -871,17 +870,21 @@
   function switchToPage(page) {
     if (page === currentPage) return;
     
+    const aura = document.getElementById('aura');
+    
     if (page === 'crypto') {
       cryptoPage.classList.remove('hidden');
       summarizePage.classList.remove('active');
       cryptoOrb.classList.add('active');
       summarizeOrb.classList.remove('active');
+      if (aura) aura.classList.remove('purple');
       currentPage = 'crypto';
     } else if (page === 'summarize') {
       cryptoPage.classList.add('hidden');
       summarizePage.classList.add('active');
       cryptoOrb.classList.remove('active');
       summarizeOrb.classList.add('active');
+      if (aura) aura.classList.add('purple');
       currentPage = 'summarize';
     }
   }
