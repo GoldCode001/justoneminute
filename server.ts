@@ -340,7 +340,7 @@ Keep it comprehensive but digestible - aim for 2-4 paragraphs that really help s
                 role: 'user', 
                 content: prompt
               }],
-              max_tokens: 600,
+              max_tokens: 800,
               temperature: 0.8
             }),
             signal: controller.signal as any
