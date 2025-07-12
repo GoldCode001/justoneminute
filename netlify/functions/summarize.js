@@ -402,6 +402,9 @@ exports.handler = async (event, context) => {
     // NEW: Post-process the summary to ensure clarity and remove any bogus content
     summary = postProcessSummary(summary, tone, contentAnalysis);
     
+    // Ensure the summary ends with a complete sentence
+    summary = ensureCompleteSentence(summary);
+    
     // Log successful tone usage and summarization
     await Promise.all([
       logToneUsage(tone),
@@ -530,6 +533,56 @@ function postProcessSummary(summary, tone, contentAnalysis) {
   }
   
   return cleaned;
+}
+
+// Helper function to ensure text ends with a complete sentence
+function ensureCompleteSentence(text) {
+  if (!text || text.trim().length === 0) {
+    return text;
+  }
+  
+  let cleanText = text.trim();
+  
+  // Check if it ends with proper sentence punctuation
+  const endsWithPunctuation = /[.!?]$/.test(cleanText);
+  
+  if (endsWithPunctuation) {
+    return cleanText; // Already complete
+  }
+  
+  // Find the last complete sentence
+  const sentences = cleanText.split(/([.!?]+)/);
+  let completeText = '';
+  
+  // Work backwards to find the last complete sentence
+  for (let i = 0; i < sentences.length - 1; i += 2) {
+    const sentence = sentences[i];
+    const punctuation = sentences[i + 1];
+    
+    if (sentence && sentence.trim().length > 0 && punctuation && /[.!?]/.test(punctuation)) {
+      completeText += sentence + punctuation;
+    }
+  }
+  
+  if (completeText.trim().length === 0) {
+    // If no complete sentences found, add a period to the original text
+    // but remove any trailing incomplete words first
+    const words = cleanText.trim().split(/\s+/);
+    if (words.length > 3) {
+      // Remove the last word if it might be incomplete
+      const truncatedText = words.slice(0, -1).join(' ');
+      return truncatedText + '.';
+    }
+    
+    // Add period if it doesn't end with punctuation
+    if (!/[.!?]$/.test(cleanText)) {
+      cleanText += '.';
+    }
+    
+    return cleanText;
+  }
+  
+  return completeText;
 }
 
 // UPDATED: Enhanced prompt generation with content analysis

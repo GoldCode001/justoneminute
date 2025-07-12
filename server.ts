@@ -266,7 +266,10 @@ app.post('/summarize', async (req: Request, res: Response): Promise<void> => {
       return;
     }
     
-    res.json({ summary });
+    // Ensure the summary ends with a complete sentence
+    const completeSummary = ensureCompleteSentence(summary);
+    
+    res.json({ summary: completeSummary });
   } catch (err: any) {
     console.error('Error in /summarize:', err);
     
@@ -417,8 +420,9 @@ Keep it comprehensive but digestible - aim for 2-4 paragraphs that really help s
       return;
     }
     
-    // Post-process the explanation to make it more human
+    // Post-process the explanation to make it more human and ensure complete sentences
     explanation = postProcessExplanation(explanation);
+    explanation = ensureCompleteSentence(explanation);
     
     res.json({ explanation });
   } catch (err: any) {
@@ -449,6 +453,71 @@ function postProcessExplanation(text: string): string {
     .replace(/$/, '</p>')
     .replace(/<p><\/p>/g, '')
     .trim();
+}
+
+// Helper function to ensure text ends with a complete sentence
+function ensureCompleteSentence(text: string): string {
+  if (!text || text.trim().length === 0) {
+    return text;
+  }
+  
+  let cleanText = text.trim();
+  
+  // Remove any HTML tags for sentence detection
+  const textWithoutHtml = cleanText.replace(/<[^>]*>/g, '');
+  
+  // Check if it ends with proper sentence punctuation
+  const endsWithPunctuation = /[.!?]$/.test(textWithoutHtml.trim());
+  
+  if (endsWithPunctuation) {
+    return cleanText; // Already complete
+  }
+  
+  // Find the last complete sentence
+  const sentences = textWithoutHtml.split(/([.!?]+)/);
+  let completeText = '';
+  let htmlText = cleanText;
+  
+  // Work backwards to find the last complete sentence
+  for (let i = 0; i < sentences.length - 1; i += 2) {
+    const sentence = sentences[i];
+    const punctuation = sentences[i + 1];
+    
+    if (sentence && sentence.trim().length > 0 && punctuation && /[.!?]/.test(punctuation)) {
+      completeText += sentence + punctuation;
+    }
+  }
+  
+  if (completeText.trim().length === 0) {
+    // If no complete sentences found, add a period to the original text
+    // but remove any trailing incomplete words first
+    const words = textWithoutHtml.trim().split(/\s+/);
+    if (words.length > 3) {
+      // Remove the last word if it might be incomplete
+      const truncatedText = words.slice(0, -1).join(' ');
+      
+      // Find this truncated text in the original HTML and cut there
+      const truncatedIndex = cleanText.toLowerCase().lastIndexOf(truncatedText.toLowerCase());
+      if (truncatedIndex !== -1) {
+        htmlText = cleanText.substring(0, truncatedIndex + truncatedText.length);
+      }
+    }
+    
+    // Add period if it doesn't end with punctuation
+    if (!/[.!?]$/.test(htmlText.replace(/<[^>]*>/g, '').trim())) {
+      htmlText += '.';
+    }
+    
+    return htmlText;
+  }
+  
+  // Find where the complete text ends in the original HTML text
+  const completeTextIndex = cleanText.toLowerCase().lastIndexOf(completeText.toLowerCase());
+  if (completeTextIndex !== -1) {
+    return cleanText.substring(0, completeTextIndex + completeText.length);
+  }
+  
+  return completeText;
 }
 
 // Static files after API routes
