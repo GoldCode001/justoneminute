@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <title>just one minute</title>
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='grad' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' style='stop-color:%23ffd700;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ffed4e;stop-opacity:1' /%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)' stroke='%23000' stroke-width='2'/%3E%3Ctext x='50' y='60' font-family='Arial,sans-serif' font-size='40' font-weight='bold' text-anchor='middle' fill='%23000'%3E1%3C/text%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='grad' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' style='stop-color:%23ffd700;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ffed4e;stop-opacity:1' /%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)' stroke='%23000' stroke-width='2'/%3E%3Ctext x='50' y='60' font-family='Arial,sans-serif' font-size='40' font-weight='bold' text-anchor='middle' fill='%23000'%3E₿%3C/text%3E%3C/svg%3E">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EBSZ1TN6BK"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-EBSZ1TN6BK');
   </script>
   <style>
@@ -32,121 +31,126 @@
       overflow: hidden;
     }
     
-    .sidebar { 
-      width: 320px;
-      transform: translateX(-320px);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      background: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%);
-      border-right: 2px solid #2a2a2a;
+    /* Page Switcher - Floating Orb Design */
+    .page-switcher {
+      position: fixed;
+      top: 50%;
+      right: 30px;
+      transform: translateY(-50%);
+      z-index: 10000;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      position: fixed;
-      top: 60px;
-      left: 0;
-      z-index: 1000;
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
-      height: calc(100vh - 60px);
+      gap: 20px;
     }
     
-    .sidebar.open {
-      transform: translateX(0);
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.7);
-    }
-    
-    .sidebar-toggle {
-      position: fixed;
-      top: 60px;
-      left: 20px;
-      height: calc(100vh - 60px);
-      width: 40px;
-      z-index: 1001;
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-      color: #0a0a0a;
+    .switch-orb {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
       border: none;
-      border-radius: 0 12px 12px 0;
-      padding: 20px 8px;
-      font-size: 1.1em;
-      font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8em;
+      color: #0a0a0a;
+      font-weight: 700;
+    }
+    
+    .switch-orb.crypto {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    }
+    
+    .switch-orb.summarize {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+    }
+    
+    .switch-orb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 12px 48px rgba(255, 215, 0, 0.5);
+    }
+    
+    .switch-orb:active {
+      transform: scale(1.05);
+    }
+    
+    .switch-orb.active {
+      transform: scale(1.2);
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+      50% { box-shadow: 0 0 60px rgba(255, 215, 0, 1); }
+    }
+    
+    /* Page Containers */
+    .page {
+      width: 100%;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      user-select: none;
-      justify-content: flex-start;
     }
     
-    .sidebar-toggle.open {
-      left: 340px;
-    }
-    
-    .sidebar-toggle:hover {
-      transform: translateX(2px);
-      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
-      background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
-    }
-    
-    .sidebar-toggle:active {
+    .page.crypto-page {
       transform: translateX(0);
-      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
     }
     
-    .toggle-icon {
-      font-size: 1.5em;
+    .page.crypto-page.hidden {
+      transform: translateX(-100%);
     }
     
-    .sidebar-header {
-      padding: 24px 20px 16px;
-      border-bottom: 1px solid #2a2a2a;
-      background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    .page.summarize-page {
+      transform: translateX(100%);
     }
     
-    .sidebar h2 { 
-      font-size: 1.4em; 
-      margin: 0;
-      color: #ffd700; 
+    .page.summarize-page.active {
+      transform: translateX(0);
+    }
+    
+    /* Header */
+    .header {
+      height: 60px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      border-bottom: 2px solid #ffd700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
+    }
+    
+    .header-text {
+      color: #ffd700;
+      font-size: 1.1em;
       font-weight: 600;
-      text-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+      text-decoration: none;
+      transition: all 0.3s ease;
     }
     
-    .history-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 20px;
+    .header-text:hover {
+      color: #ffed4e;
+      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+      transform: translateY(-1px);
     }
     
-    .history-content::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    .history-content::-webkit-scrollbar-track {
-      background: #1a1a1a;
-      border-radius: 4px;
-    }
-    
-    .history-content::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%);
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
-    }
-    
-    .history-content::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, #ffed4e 0%, #ffd700 100%);
-    }
-    
+    /* Main Content Areas */
     .main-content { 
       flex: 1; 
       display: flex; 
       justify-content: center; 
       align-items: flex-start;
-      height: calc(100vh - 110px);
       overflow-y: auto;
-      padding: 0 20px;
-      width: 100%;
-      padding-top: 60px;
-      padding-bottom: 50px;
+      padding: 40px 20px 70px;
     }
     
     .main-content::-webkit-scrollbar {
@@ -164,25 +168,22 @@
       box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
     }
     
-    .main-content::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, #ffed4e 0%, #ffd700 100%);
-    }
-    
     .container { 
       width: 100%; 
       max-width: 700px; 
-      margin: 40px auto;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: calc(100vh - 220px);
+      min-height: calc(100vh - 180px);
     }
     
-    h1 { 
-      font-size: 2.8em;
+    /* Crypto Dictionary Styles */
+    .crypto-title { 
+      font-size: 3.2em;
       font-weight: 700;
-      margin-bottom: 32px;
+      margin-bottom: 16px;
       background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -192,7 +193,84 @@
       letter-spacing: -0.02em;
     }
     
-    input, select { 
+    .crypto-subtitle {
+      font-size: 1.3em;
+      color: #ccc;
+      text-align: center;
+      margin-bottom: 40px;
+      font-weight: 400;
+    }
+    
+    .crypto-input {
+      width: 100%; 
+      padding: 20px 24px; 
+      margin: 20px 0; 
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+      color: #f5f5f5; 
+      border: 3px solid #2a2a2a;
+      border-radius: 20px; 
+      font-size: 1.3em;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+    
+    .crypto-input:focus {
+      outline: none;
+      border-color: #ffd700;
+      box-shadow: 0 0 0 6px rgba(255, 215, 0, 0.2), 0 12px 32px rgba(0, 0, 0, 0.5);
+      transform: translateY(-3px);
+    }
+    
+    .crypto-input::placeholder {
+      color: #888;
+      font-weight: 400;
+    }
+    
+    .crypto-btn { 
+      width: 100%; 
+      padding: 20px 28px; 
+      margin-top: 24px; 
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      color: #0a0a0a; 
+      font-size: 1.3em; 
+      font-weight: 700;
+      border: none; 
+      border-radius: 24px; 
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    
+    .crypto-btn:hover { 
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(255, 215, 0, 0.6);
+      background: linear-gradient(135deg, #ffed4e 0%, #ffd700 50%, #ffed4e 100%);
+    }
+    
+    .crypto-btn:active {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Summarize Page Styles */
+    .summarize-title { 
+      font-size: 2.8em;
+      font-weight: 700;
+      margin-bottom: 32px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 50%, #ff6b6b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      text-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+      letter-spacing: -0.02em;
+    }
+    
+    input, select, textarea { 
       width: 100%; 
       padding: 16px 20px; 
       margin: 12px 0; 
@@ -206,89 +284,44 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
     
-    input:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
-      color: #666;
-    }
-    
-    input:disabled:hover {
-      transform: none;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      border-color: #2a2a2a;
-    }
-    
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: #ffd700;
-      box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
+      border-color: #ff6b6b;
+      box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
       transform: translateY(-2px);
-    }
-    
-    input::placeholder {
-      color: #888;
-      font-weight: 400;
     }
     
     textarea { 
-      width: 100%; 
-      padding: 16px 20px; 
-      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-      color: #f5f5f5; 
-      border: 2px solid #2a2a2a;
-      border-radius: 16px; 
-      margin: 12px 0; 
-      font-size: 1.1em; 
-      font-weight: 500;
       resize: vertical;
       min-height: 120px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       font-family: inherit;
     }
     
-    textarea:focus {
-      outline: none;
-      border-color: #ffd700;
-      box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
-      transform: translateY(-2px);
-    }
-    
-    textarea::placeholder {
-      color: #888;
-      font-weight: 400;
-    }
-    
-    button { 
+    .summarize-btn { 
       width: 100%; 
       padding: 18px 24px; 
       margin-top: 20px; 
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-      color: #0a0a0a; 
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 50%, #ff6b6b 100%);
+      color: #fff; 
       font-size: 1.2em; 
       font-weight: 700;
       border: none; 
       border-radius: 20px; 
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     
-    button:hover { 
+    .summarize-btn:hover { 
       transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(255, 215, 0, 0.6);
-      background: linear-gradient(135deg, #ffed4e 0%, #ffd700 50%, #ffed4e 100%);
+      box-shadow: 0 12px 32px rgba(255, 107, 107, 0.6);
+      background: linear-gradient(135deg, #ff8e8e 0%, #ff6b6b 50%, #ff8e8e 100%);
     }
     
-    button:active {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.5);
-    }
-    
-    .summary-container { 
+    /* Response Containers */
+    .response-container { 
       margin-top: 32px;
       background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
       border: 2px solid #2a2a2a;
@@ -297,7 +330,7 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
     
-    .summary-display { 
+    .response-display { 
       width: 100%; 
       min-height: 150px; 
       background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
@@ -312,31 +345,25 @@
       box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     
-    .summary-display strong { 
+    .response-display strong { 
       color: #ffd700; 
       font-weight: 700;
       text-shadow: 0 1px 2px rgba(255, 215, 0, 0.3);
     }
     
-    .summary-display em { 
+    .response-display em { 
       color: #ffed4e; 
       font-style: italic; 
     }
     
-    .summary-display ul, .summary-display ol { 
+    .response-display ul, .response-display ol { 
       margin: 12px 0; 
       padding-left: 24px; 
     }
     
-    .summary-display li { 
-      margin: 6px 0;
+    .response-display li { 
+      margin: 8px 0;
       color: #e5e5e5;
-    }
-    
-    .summary-display h1, .summary-display h2, .summary-display h3 { 
-      color: #ffd700; 
-      margin: 16px 0 12px 0;
-      text-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
     }
     
     .copy-btn { 
@@ -359,6 +386,7 @@
       box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
     }
     
+    /* Error Styles */
     .error { 
       background: linear-gradient(135deg, #2a0a0a 0%, #3a1515 100%);
       padding: 20px 24px; 
@@ -408,132 +436,8 @@
       font-style: italic;
     }
     
-    .history-item { 
-      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-      padding: 16px; 
-      border-radius: 12px; 
-      margin-bottom: 12px; 
-      cursor: pointer; 
-      border: 2px solid transparent;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-    
-    .history-item:hover { 
-      border-color: #ffd700;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
-      background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    }
-    
-    .history-meta { 
-      font-size: 0.85em; 
-      color: #ffd700; 
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    
-    .history-preview { 
-      font-size: 0.95em; 
-      line-height: 1.4; 
-      overflow: hidden; 
-      display: -webkit-box; 
-      -webkit-line-clamp: 3; 
-      -webkit-box-orient: vertical;
-      color: #e5e5e5;
-    }
-    
-    .clear-history { 
-      background: linear-gradient(135deg, #2a0a0a 0%, #3a1515 100%);
-      color: #ff6b6b; 
-      padding: 12px 16px; 
-      font-size: 0.9em; 
-      margin: 16px 0 0 0;
-      border: 2px solid #4a1515;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
-    }
-    
-    .clear-history:hover {
-      background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-      color: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-    }
-
-    /* Custom select styling */
-    select {
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffd700' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 16px center;
-      background-size: 20px;
-      padding-right: 50px;
-    }
-
-    /* Custom dropdown options styling */
-    select option {
-      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-      color: #f5f5f5;
-      padding: 12px 16px;
-      border: none;
-      font-weight: 500;
-    }
-    
-    select option:hover,
-    select option:focus,
-    select option:checked {
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-      color: #0a0a0a;
-      font-weight: 600;
-    }
-
-    /* Loading animation */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    .loading {
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    
-    /* Header styles */
-    .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-      border-bottom: 2px solid #ffd700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
-    }
-    
-    .header-text {
-      color: #ffd700;
-      font-size: 1.1em;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-    
-    .header-text:hover {
-      color: #ffed4e;
-      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
-      transform: translateY(-1px);
-    }
-    
-    /* Footer styles */
+    /* Footer */
     .footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
       height: 50px;
       background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
       border-top: 1px solid #2a2a2a;
@@ -557,7 +461,15 @@
       transform: translateY(-1px);
     }
     
-    /* Adjust main content to account for header and footer */
+    /* Loading animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
     
     /* Interactive Aura Effect */
     .aura {
@@ -648,87 +560,145 @@
       }
     }
     
-    /* Enhance existing elements with subtle glow on interaction */
-    button:active, input:active, textarea:active, select:active {
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4);
-    }
-    
-    .history-item:active {
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3), 0 8px 24px rgba(255, 215, 0, 0.2);
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .page-switcher {
+        right: 15px;
+        gap: 15px;
+      }
+      
+      .switch-orb {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5em;
+      }
+      
+      .crypto-title {
+        font-size: 2.5em;
+      }
+      
+      .summarize-title {
+        font-size: 2.2em;
+      }
+      
+      .container {
+        padding: 0 15px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3ZHXFFM"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
-  
   <!-- Interactive Aura Element -->
   <div id="aura" class="aura"></div>
   
-  <div class="header">
-    <a href="https://goldmancreates.substack.com" target="_blank" class="header-text">
-      join my newsletter -- goldmancreates.substack.com
-    </a>
+  <!-- Page Switcher - Floating Orbs -->
+  <div class="page-switcher">
+    <button type="button" id="cryptoOrb" class="switch-orb crypto active" title="Crypto Dictionary">
+      ₿
+    </button>
+    <button type="button" id="summarizeOrb" class="switch-orb summarize" title="Long-form Summarizer">
+      📝
+    </button>
   </div>
   
-  <button type="button" id="sidebarToggle" class="sidebar-toggle">
-    <span id="toggleIcon" class="toggle-icon">📜</span>
-  </button>
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <h2>History</h2>
+  <!-- CRYPTO DICTIONARY PAGE -->
+  <div class="page crypto-page" id="cryptoPage">
+    <div class="header">
+      <a href="https://goldmancreates.substack.com" target="_blank" class="header-text">
+        join my newsletter -- goldmancreates.substack.com
+      </a>
     </div>
-    <div class="history-content">
-      <div id="historyList"></div>
-      <button type="button" id="clearHistoryBtn" class="clear-history">Clear History</button>
-    </div>
-  </div>
-  <div class="main-content">
-    <div class="container">
-      <h1>...just one minute</h1>
-      <input id="threadUrl" type="text" placeholder="Paste Twitter thread link (optional)" disabled>
-      <textarea id="rawText" placeholder="paste any long form text here" rows="4"></textarea>
-      <select id="length">
-        <option value="1 line">1 line</option>
-        <option value="3 sentences" selected>3 sentences</option>
-        <option value="bullet list">bullet list</option>
-      </select>
-      <select id="tone">
-        <option value="simple">simple</option>
-        <option value="professional">professional</option>
-        <option value="conversational">conversational</option>
-        <option value="shitpost">shitpost</option>
-        <option value="infographics">infographics</option>
-      </select>
-      <button type="button" id="summarizeBtn">summarize</button>
-      <div id="error"></div>
-      <div class="summary-container" id="summaryContainer" style="display: none;">
-        <div id="summaryDisplay" class="summary-display"></div>
-        <button type="button" id="copyBtn" class="copy-btn">Copy to Clipboard</button>
+    
+    <div class="main-content">
+      <div class="container">
+        <h1 class="crypto-title">crypto dictionary</h1>
+        <p class="crypto-subtitle">ask me anything about crypto, defi, web3, or blockchain</p>
+        
+        <input id="cryptoInput" type="text" class="crypto-input" placeholder="bitcoin, ethereum, defi, nft, dao...">
+        <button type="button" id="cryptoBtn" class="crypto-btn">explain it</button>
+        
+        <div id="cryptoError"></div>
+        <div class="response-container" id="cryptoResponseContainer" style="display: none;">
+          <div id="cryptoResponse" class="response-display"></div>
+          <button type="button" id="cryptoCopyBtn" class="copy-btn">Copy to Clipboard</button>
+        </div>
       </div>
     </div>
+    
+    <div class="footer">
+      <a href="https://x.com/goldmancreates" target="_blank" class="footer-text">...made with 🖤 by goldman</a>
+    </div>
   </div>
   
-  <div class="footer">
-    <a href="https://x.com/goldmancreates" target="_blank" class="footer-text">...made with 🖤 by goldman</a>
+  <!-- LONG-FORM SUMMARIZER PAGE -->
+  <div class="page summarize-page" id="summarizePage">
+    <div class="header">
+      <a href="https://goldmancreates.substack.com" target="_blank" class="header-text">
+        join my newsletter -- goldmancreates.substack.com
+      </a>
+    </div>
+    
+    <div class="main-content">
+      <div class="container">
+        <h1 class="summarize-title">...just one minute</h1>
+        <textarea id="rawText" placeholder="paste any long form text here" rows="4"></textarea>
+        <select id="length">
+          <option value="1 line">1 line</option>
+          <option value="3 sentences" selected>3 sentences</option>
+          <option value="bullet list">bullet list</option>
+        </select>
+        <select id="tone">
+          <option value="simple">simple</option>
+          <option value="professional">professional</option>
+          <option value="conversational">conversational</option>
+          <option value="shitpost">shitpost</option>
+          <option value="infographics">infographics</option>
+        </select>
+        <button type="button" id="summarizeBtn" class="summarize-btn">summarize</button>
+        <div id="summarizeError"></div>
+        <div class="response-container" id="summarizeResponseContainer" style="display: none;">
+          <div id="summarizeResponse" class="response-display"></div>
+          <button type="button" id="summarizeCopyBtn" class="copy-btn">Copy to Clipboard</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <a href="https://x.com/goldmancreates" target="_blank" class="footer-text">...made with 🖤 by goldman</a>
+    </div>
   </div>
   
 <script>
-  console.log('script loaded');
-  const btn = document.getElementById('summarizeBtn');
-  const errorEl = document.getElementById('error');
-  const summaryEl = document.getElementById('summary');
-  const threadInput = document.getElementById('threadUrl');
-  const rawTextInput = document.getElementById('rawText');
-  const lengthSelect = document.getElementById('length');
-  const toneSelect = document.getElementById('tone');
-  const summaryContainer = document.getElementById('summaryContainer');
-  const summaryDisplay = document.getElementById('summaryDisplay');
-  const copyBtn = document.getElementById('copyBtn');
-  const historyList = document.getElementById('historyList');
-  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  console.log('Multi-page app loaded');
+  
+  // Page switching functionality
+  const cryptoPage = document.getElementById('cryptoPage');
+  const summarizePage = document.getElementById('summarizePage');
+  const cryptoOrb = document.getElementById('cryptoOrb');
+  const summarizeOrb = document.getElementById('summarizeOrb');
+  
+  let currentPage = 'crypto';
+  
+  function switchToPage(page) {
+    if (page === currentPage) return;
+    
+    if (page === 'crypto') {
+      cryptoPage.classList.remove('hidden');
+      summarizePage.classList.remove('active');
+      cryptoOrb.classList.add('active');
+      summarizeOrb.classList.remove('active');
+      currentPage = 'crypto';
+    } else if (page === 'summarize') {
+      cryptoPage.classList.add('hidden');
+      summarizePage.classList.add('active');
+      cryptoOrb.classList.remove('active');
+      summarizeOrb.classList.add('active');
+      currentPage = 'summarize';
+    }
+  }
+  
+  cryptoOrb.addEventListener('click', () => switchToPage('crypto'));
+  summarizeOrb.addEventListener('click', () => switchToPage('summarize'));
   
   // Interactive Aura Effect
   const aura = document.getElementById('aura');
@@ -748,7 +718,6 @@
       aura.classList.add('active');
       isInteracting = true;
       
-      // Clear any existing timeout
       if (auraTimeout) {
         clearTimeout(auraTimeout);
       }
@@ -774,7 +743,6 @@
   });
   
   document.addEventListener('mouseup', () => {
-    // Add a small delay before hiding to create a smooth transition
     auraTimeout = setTimeout(hideAura, 150);
   });
   
@@ -792,96 +760,33 @@
   }, { passive: true });
   
   document.addEventListener('touchend', () => {
-    // Add a small delay before hiding to create a smooth transition
     auraTimeout = setTimeout(hideAura, 200);
   }, { passive: true });
   
-  // Handle mouse leave to hide aura when cursor leaves the window
   document.addEventListener('mouseleave', hideAura);
   
-  // Sidebar toggle functionality
-  const sidebar = document.getElementById('sidebar');
-  const sidebarToggle = document.getElementById('sidebarToggle');
-  const toggleIcon = document.getElementById('toggleIcon');
-  let sidebarOpen = false;
-  
-  sidebarToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sidebarOpen = !sidebarOpen;
-    if (sidebarOpen) {
-      sidebar.classList.add('open');
-      sidebarToggle.classList.add('open');
-      toggleIcon.textContent = '✕';
-    } else {
-      sidebar.classList.remove('open');
-      sidebarToggle.classList.remove('open');
-      toggleIcon.textContent = '📜';
-    }
-  });
-  
-  // Close sidebar when clicking outside
-  document.addEventListener('click', (e) => {
-    if (sidebarOpen && 
-        !sidebar.contains(e.target) && 
-        !sidebarToggle.contains(e.target)) {
-      sidebarOpen = false;
-      sidebar.classList.remove('open');
-      sidebarToggle.classList.remove('open');
-      toggleIcon.textContent = '📜';
-    }
-  });
-  
-  // Load history from localStorage
-  let summaryHistory = JSON.parse(localStorage.getItem('summaryHistory') || '[]');
-  
-  function saveToHistory(summary, source, length, tone) {
-    const historyItem = {
-      id: Date.now(),
-      summary,
-      source: source.length > 50 ? source.substring(0, 50) + '...' : source,
-      length,
-      tone,
-      timestamp: new Date().toLocaleString()
-    };
-    summaryHistory.unshift(historyItem);
-    if (summaryHistory.length > 50) summaryHistory = summaryHistory.slice(0, 50); // Keep only last 50
-    localStorage.setItem('summaryHistory', JSON.stringify(summaryHistory));
-    renderHistory();
+  // Track site visit when page loads
+  fetch('/.netlify/functions/track-visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }).catch(err => console.log('Visit tracking failed:', err));
+
+  // Helper function to escape HTML characters
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   
-  function renderHistory() {
-    if (!historyList) return;
-    historyList.innerHTML = summaryHistory.map(item => `
-      <div class="history-item" onclick="loadHistoryItem(${item.id})">
-        <div class="history-meta">${item.timestamp} • ${item.length} • ${item.tone}</div>
-        <div class="history-preview">${escapeHtml(item.summary)}</div>
-      </div>
-    `).join('');
-  }
-  
-  window.loadHistoryItem = function(id) {
-    const item = summaryHistory.find(h => h.id === id);
-    if (item && summaryDisplay && summaryContainer) {
-      summaryDisplay.innerHTML = formatSummary(item.summary);
-      summaryContainer.style.display = 'block';
-    }
-  }
-  
-  // Format summary text with proper HTML formatting
-  function formatSummary(text) {
+  // Format response text with proper HTML formatting
+  function formatResponse(text) {
     let formatted = text
-      // Convert **bold** to <strong>
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Convert *italic* to <em>
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // Convert ### headers
       .replace(/^###\s+(.+)$/gm, '<h3>$1</h3>')
-      // Convert ## headers
       .replace(/^##\s+(.+)$/gm, '<h2>$1</h2>')
-      // Convert # headers
       .replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
     
-    // Handle bullet points with proper line breaks
     const lines = formatted.split('\n');
     let inList = false;
     let result = [];
@@ -889,13 +794,11 @@
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Check if line starts with bullet indicators
       if (line.match(/^[•·\-\*]\s+/) || line.match(/^\d+\.\s+/)) {
         if (!inList) {
           result.push('<ul>');
           inList = true;
         }
-        // Remove bullet indicator and wrap in <li>
         const content = line.replace(/^[•·\-\*]\s+/, '').replace(/^\d+\.\s+/, '');
         result.push(`<li>${content}</li>`);
       } else {
@@ -916,82 +819,110 @@
     return result.join('\n');
   }
   
-  // Copy to clipboard functionality
-  copyBtn?.addEventListener('click', async () => {
-    if (!summaryDisplay) return;
-    try {
-      await navigator.clipboard.writeText(summaryDisplay.textContent || summaryDisplay.innerText);
-      const originalText = copyBtn.textContent;
-      copyBtn.textContent = 'Copied!';
-      setTimeout(() => {
-        copyBtn.textContent = originalText;
-      }, 2000);
-    } catch (err) {
-      // Fallback for older browsers
-      const range = document.createRange();
-      range.selectNode(summaryDisplay);
-      const originalText = copyBtn.textContent;
-      copyBtn.textContent = 'Copied!';
-      setTimeout(() => {
-        copyBtn.textContent = originalText;
-      }, 2000);
-    }
-  });
-  
-  // Clear history functionality
-  clearHistoryBtn?.addEventListener('click', () => {
-    if (confirm('Are you sure you want to clear all history?')) {
-      summaryHistory = [];
-      localStorage.removeItem('summaryHistory');
-      renderHistory();
-    }
-  });
-  
-  // Initialize history display
-  renderHistory();
-  
-  // Track site visit when page loads
-  fetch('/.netlify/functions/track-visit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
-  }).catch(err => console.log('Visit tracking failed:', err));
-
-  // Helper function to escape HTML characters
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  // Enhanced error handling functions
+  function showError(errorEl, title, message, suggestion = '') {
+    if (!errorEl) return;
+    
+    errorEl.style.display = 'block';
+    errorEl.innerHTML = `
+      <div class="error">
+        <div class="error-content">
+          <div class="error-title">${title}</div>
+          <div class="error-message">${message}</div>
+          ${suggestion ? `<div class="error-suggestion">💡 ${suggestion}</div>` : ''}
+        </div>
+      </div>
+    `;
   }
-
-  btn?.addEventListener('click', async () => {
-    if (!errorEl || !summaryDisplay || !summaryContainer) return;
+  
+  function handleError(err, errorEl) {
+    const message = err.message || 'An unexpected error occurred';
     
-    // Clear any previous errors
-    errorEl.innerHTML = '';
-    errorEl.style.display = 'none';
+    if (message.includes('timeout') || message.includes('taking too long') || message.includes('Request timeout')) {
+      showError(
+        errorEl,
+        'Request Timeout',
+        'The AI service is taking longer than usual to respond.',
+        'This usually happens with very long text. Try using shorter content or wait a moment and try again.'
+      );
+    } else if (message.includes('rate limit') || message.includes('Too many requests')) {
+      showError(
+        errorEl,
+        'Too Many Requests',
+        'We\'re receiving a lot of requests right now.',
+        'Please wait a moment and try again. The service will be available shortly.'
+      );
+    } else if (message.includes('network') || message.includes('Network error') || message.includes('fetch')) {
+      showError(
+        errorEl,
+        'Connection Issue',
+        'Unable to connect to the AI service.',
+        'Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable.'
+      );
+    } else if (message.includes('Invalid response') || message.includes('Empty response') || message.includes('invalid response')) {
+      showError(
+        errorEl,
+        'Service Error',
+        'The AI service returned an unexpected response.',
+        'This is usually temporary. Please try again with the same or different content.'
+      );
+    } else if (message.includes('Server error') || message.includes('Internal server error')) {
+      showError(
+        errorEl,
+        'Server Issue',
+        'Our servers are experiencing some difficulties.',
+        'We\'re working to resolve this. Please try again in a few minutes.'
+      );
+    } else if (message.includes('No summary was generated')) {
+      showError(
+        errorEl,
+        'Generation Failed',
+        'Unable to generate a response for this content.',
+        'Try using different text or a different approach.'
+      );
+    } else {
+      showError(
+        errorEl,
+        'Something Went Wrong',
+        message,
+        'If this keeps happening, try refreshing the page or using different content.'
+      );
+    }
+  }
+  
+  // CRYPTO DICTIONARY FUNCTIONALITY
+  const cryptoInput = document.getElementById('cryptoInput');
+  const cryptoBtn = document.getElementById('cryptoBtn');
+  const cryptoError = document.getElementById('cryptoError');
+  const cryptoResponseContainer = document.getElementById('cryptoResponseContainer');
+  const cryptoResponse = document.getElementById('cryptoResponse');
+  const cryptoCopyBtn = document.getElementById('cryptoCopyBtn');
+  
+  cryptoBtn?.addEventListener('click', async () => {
+    if (!cryptoError || !cryptoResponse || !cryptoResponseContainer) return;
     
-    summaryDisplay.innerHTML = 'Loading...';
-    summaryDisplay.classList.add('loading');
-    summaryContainer.style.display = 'block';
-
-    const threadUrl = ''; // Disabled input, always empty
-    const rawText = rawTextInput instanceof HTMLTextAreaElement ? rawTextInput.value.trim() : '';
-    const length = lengthSelect instanceof HTMLSelectElement ? lengthSelect.value : '';
-    const tone = toneSelect instanceof HTMLSelectElement ? toneSelect.value : '';
-
-    if (!rawText) {
-      showError('No Content Provided', 'Please paste some text to summarize.', 'Try copying and pasting an article, blog post, Twitter thread, or any long-form content you\'d like summarized.');
-      summaryDisplay.innerHTML = '';
-      summaryDisplay.classList.remove('loading');
-      summaryContainer.style.display = 'none';
+    cryptoError.innerHTML = '';
+    cryptoError.style.display = 'none';
+    
+    const term = cryptoInput instanceof HTMLInputElement ? cryptoInput.value.trim() : '';
+    
+    if (!term) {
+      showError(cryptoError, 'No Term Provided', 'Please enter a crypto term, concept, or question.', 'Try words like "bitcoin", "defi", "smart contract", or "what is ethereum?"');
+      cryptoResponse.innerHTML = '';
+      cryptoResponse.classList.remove('loading');
+      cryptoResponseContainer.style.display = 'none';
       return;
     }
-
+    
+    cryptoResponse.innerHTML = 'Thinking...';
+    cryptoResponse.classList.add('loading');
+    cryptoResponseContainer.style.display = 'block';
+    
     try {
-      const res = await fetch('/.netlify/functions/summarize', {
+      const res = await fetch('/.netlify/functions/crypto-explain', {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ threadUrl, rawText, length, tone })
+        body: JSON.stringify({ term })
       });
       
       const responseText = await res.text();
@@ -1008,12 +939,115 @@
         throw new Error('The server returned an invalid response. Please try again.');
       }
       
-      // Check if the response indicates an error (even with 200 status)
       if (data.error) {
         throw new Error(data.error);
       }
       
-      // Check for non-200 status codes
+      if (!res.ok) {
+        throw new Error(data.error || `Server error (${res.status})`);
+      }
+      
+      if (!data.explanation) {
+        throw new Error('No explanation was generated. Please try again with different content.');
+      }
+      
+      cryptoResponse.innerHTML = formatResponse(data.explanation);
+      cryptoResponse.classList.remove('loading');
+      
+      console.log(`Successfully explained crypto term: ${term}`);
+    } catch (err) {
+      handleError(err, cryptoError);
+      cryptoResponse.innerHTML = '';
+      cryptoResponse.classList.remove('loading');
+      cryptoResponseContainer.style.display = 'none';
+    }
+  });
+  
+  // Enter key support for crypto input
+  cryptoInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      cryptoBtn?.click();
+    }
+  });
+  
+  // Copy functionality for crypto
+  cryptoCopyBtn?.addEventListener('click', async () => {
+    if (!cryptoResponse) return;
+    try {
+      await navigator.clipboard.writeText(cryptoResponse.textContent || cryptoResponse.innerText);
+      const originalText = cryptoCopyBtn.textContent;
+      cryptoCopyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        cryptoCopyBtn.textContent = originalText;
+      }, 2000);
+    } catch (err) {
+      const range = document.createRange();
+      range.selectNode(cryptoResponse);
+      const originalText = cryptoCopyBtn.textContent;
+      cryptoCopyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        cryptoCopyBtn.textContent = originalText;
+      }, 2000);
+    }
+  });
+  
+  // LONG-FORM SUMMARIZER FUNCTIONALITY
+  const rawTextInput = document.getElementById('rawText');
+  const lengthSelect = document.getElementById('length');
+  const toneSelect = document.getElementById('tone');
+  const summarizeBtn = document.getElementById('summarizeBtn');
+  const summarizeError = document.getElementById('summarizeError');
+  const summarizeResponseContainer = document.getElementById('summarizeResponseContainer');
+  const summarizeResponse = document.getElementById('summarizeResponse');
+  const summarizeCopyBtn = document.getElementById('summarizeCopyBtn');
+  
+  summarizeBtn?.addEventListener('click', async () => {
+    if (!summarizeError || !summarizeResponse || !summarizeResponseContainer) return;
+    
+    summarizeError.innerHTML = '';
+    summarizeError.style.display = 'none';
+    
+    summarizeResponse.innerHTML = 'Loading...';
+    summarizeResponse.classList.add('loading');
+    summarizeResponseContainer.style.display = 'block';
+
+    const rawText = rawTextInput instanceof HTMLTextAreaElement ? rawTextInput.value.trim() : '';
+    const length = lengthSelect instanceof HTMLSelectElement ? lengthSelect.value : '';
+    const tone = toneSelect instanceof HTMLSelectElement ? toneSelect.value : '';
+
+    if (!rawText) {
+      showError(summarizeError, 'No Content Provided', 'Please paste some text to summarize.', 'Try copying and pasting an article, blog post, Twitter thread, or any long-form content you\'d like summarized.');
+      summarizeResponse.innerHTML = '';
+      summarizeResponse.classList.remove('loading');
+      summarizeResponseContainer.style.display = 'none';
+      return;
+    }
+
+    try {
+      const res = await fetch('/.netlify/functions/summarize', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadUrl: '', rawText, length, tone })
+      });
+      
+      const responseText = await res.text();
+      
+      if (!responseText) {
+        throw new Error('Empty response from server');
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', responseText);
+        throw new Error('The server returned an invalid response. Please try again.');
+      }
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
       if (!res.ok) {
         throw new Error(data.error || `Server error (${res.status})`);
       }
@@ -1022,83 +1056,38 @@
         throw new Error('No summary was generated. Please try again with different content.');
       }
       
-      summaryDisplay.innerHTML = formatSummary(data.summary);
-      summaryDisplay.classList.remove('loading');
-      
-      // Save to history
-      const source = threadUrl || rawText;
-      saveToHistory(data.summary, source, length, tone);
+      summarizeResponse.innerHTML = formatResponse(data.summary);
+      summarizeResponse.classList.remove('loading');
       
       console.log(`Successfully used tone: ${tone} with length: ${length}`);
     } catch (err) {
-      handleError(err);
-      summaryDisplay.innerHTML = '';
-      summaryDisplay.classList.remove('loading');
-      summaryContainer.style.display = 'none';
+      handleError(err, summarizeError);
+      summarizeResponse.innerHTML = '';
+      summarizeResponse.classList.remove('loading');
+      summarizeResponseContainer.style.display = 'none';
     }
   });
   
-  // Enhanced error handling functions
-  function showError(title, message, suggestion = '') {
-    if (!errorEl) return;
-    
-    errorEl.style.display = 'block';
-    errorEl.innerHTML = `
-      <div class="error-content">
-        <div class="error-title">${title}</div>
-        <div class="error-message">${message}</div>
-        ${suggestion ? `<div class="error-suggestion">💡 ${suggestion}</div>` : ''}
-      </div>
-    `;
-  }
-  
-  function handleError(err) {
-    const message = err.message || 'An unexpected error occurred';
-    
-    if (message.includes('timeout') || message.includes('taking too long') || message.includes('Request timeout')) {
-      showError(
-        'Request Timeout',
-        'The AI service is taking longer than usual to respond.',
-        'This usually happens with very long text. Try using shorter content or wait a moment and try again.'
-      );
-    } else if (message.includes('rate limit') || message.includes('Too many requests')) {
-      showError(
-        'Too Many Requests',
-        'We\'re receiving a lot of requests right now.',
-        'Please wait a moment and try again. The service will be available shortly.'
-      );
-    } else if (message.includes('network') || message.includes('Network error') || message.includes('fetch')) {
-      showError(
-        'Connection Issue',
-        'Unable to connect to the AI service.',
-        'Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable.'
-      );
-    } else if (message.includes('Invalid response') || message.includes('Empty response') || message.includes('invalid response')) {
-      showError(
-        'Service Error',
-        'The AI service returned an unexpected response.',
-        'This is usually temporary. Please try again with the same or different content.'
-      );
-    } else if (message.includes('Server error') || message.includes('Internal server error')) {
-      showError(
-        'Server Issue',
-        'Our servers are experiencing some difficulties.',
-        'We\'re working to resolve this. Please try again in a few minutes.'
-      );
-    } else if (message.includes('No summary was generated')) {
-      showError(
-        'Generation Failed',
-        'Unable to generate a summary for this content.',
-        'Try using different text or a different tone/length combination.'
-      );
-    } else {
-      showError(
-        'Something Went Wrong',
-        message,
-        'If this keeps happening, try refreshing the page or using shorter text.'
-      );
+  // Copy functionality for summarizer
+  summarizeCopyBtn?.addEventListener('click', async () => {
+    if (!summarizeResponse) return;
+    try {
+      await navigator.clipboard.writeText(summarizeResponse.textContent || summarizeResponse.innerText);
+      const originalText = summarizeCopyBtn.textContent;
+      summarizeCopyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        summarizeCopyBtn.textContent = originalText;
+      }, 2000);
+    } catch (err) {
+      const range = document.createRange();
+      range.selectNode(summarizeResponse);
+      const originalText = summarizeCopyBtn.textContent;
+      summarizeCopyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        summarizeCopyBtn.textContent = originalText;
+      }, 2000);
     }
-  }
+  });
 </script>
 </body>
 </html>

@@ -1,0 +1,245 @@
+exports.handler = async (event, context) => {
+  // Set context timeout to maximum available
+  context.callbackWaitsForEmptyEventLoop = false;
+  
+  // Set CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
+
+  try {
+    const { term } = JSON.parse(event.body || '{}');
+    
+    if (!term || !term.trim()) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'No crypto term provided.' })
+      };
+    }
+
+    const cleanTerm = term.trim();
+    console.log('Explaining crypto term:', cleanTerm);
+
+    // Create the most human, conversational prompt possible
+    const prompt = `You're the coolest crypto expert who explains things like you're talking to a friend over coffee. Someone just asked you about "${cleanTerm}" and you want to give them the most helpful, human explanation ever.
+
+CRITICAL INSTRUCTIONS:
+- Write like you're genuinely excited to share knowledge with a friend
+- Use natural language, contractions, and be conversational as hell
+- Explain it so clearly that anyone can understand, but don't be condescending
+- Include why it matters, how it works, and any cool real-world examples
+- Keep it concise but comprehensive - like the perfect explanation you'd give in person
+- Use analogies and examples that actually make sense
+- Be enthusiastic but not over the top
+- If it's a complex topic, break it down into digestible pieces
+- Include any important context or background they should know
+- Make it feel like you're genuinely helping them understand something awesome
+
+Don't start with "Here's" or "This is" - just dive right into explaining it naturally. Make it feel like a real conversation where you're sharing something you're passionate about.
+
+Explain: ${cleanTerm}`;
+
+    // Aggressive retry logic with very short timeouts
+    const makeApiCallWithRetry = async (retries = 2) => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`API call attempt ${attempt}/${retries}`);
+          
+          const timeoutMs = attempt === 1 ? 4000 : 3000;
+          
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
+          });
+
+          const apiCallPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, 
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://just-one-minute-goldman.netlify.app',
+              'X-Title': 'Just One Minute - Crypto Dictionary'
+            },
+            body: JSON.stringify({
+              model: 'openai/gpt-4o-2024-11-20',
+              messages: [{ 
+                role: 'user', 
+                content: prompt
+              }],
+              max_tokens: 200, // Keep it concise but informative
+              temperature: 0.8 // Higher temperature for more natural, conversational responses
+            })
+          });
+
+          const llmRes = await Promise.race([apiCallPromise, timeoutPromise]);
+          
+          if (!llmRes.ok) {
+            const errText = await llmRes.text().catch(() => 'Unknown error');
+            console.error(`OpenRouter API error (attempt ${attempt}):`, errText);
+            
+            if (llmRes.status >= 500 && attempt < retries) {
+              console.log(`Retrying due to server error (${llmRes.status})...`);
+              await new Promise(resolve => setTimeout(resolve, 500));
+              continue;
+            }
+            
+            throw new Error(`AI service error: ${errText}`);
+          }
+          
+          return llmRes;
+          
+        } catch (error) {
+          console.error(`Attempt ${attempt} failed:`, error.message);
+          
+          if ((error.message === 'Request timeout' || error.message.includes('fetch') || error.code === 'ECONNRESET') && attempt < retries) {
+            console.log(`Retrying due to ${error.message}...`);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            continue;
+          }
+          
+          throw error;
+        }
+      }
+    };
+
+    const llmRes = await makeApiCallWithRetry();
+    
+    const responseText = await llmRes.text();
+    let llmData;
+    try {
+      llmData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse OpenRouter response:', responseText);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Invalid response from AI service' })
+      };
+    }
+    
+    if (!llmData.choices || !llmData.choices[0] || !llmData.choices[0].message) {
+      console.error('Invalid response structure from OpenRouter:', llmData);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Invalid response structure from AI service' })
+      };
+    }
+    
+    let explanation = llmData.choices[0].message.content.trim();
+    
+    if (!explanation) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Empty explanation received from AI service' })
+      };
+    }
+
+    // Post-process to ensure it's conversational and natural
+    explanation = postProcessExplanation(explanation);
+    
+    console.log('Generated crypto explanation for:', cleanTerm);
+    
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ explanation })
+    };
+  } catch (err) {
+    console.error('Error in crypto-explain function:', err);
+    
+    if (err.message === 'Request timeout') {
+      return {
+        statusCode: 408,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Request timeout - the AI service is taking too long to respond. Try again in a moment.' 
+        })
+      };
+    }
+    
+    let statusCode = 500;
+    let errorMessage = err.message || 'Internal server error';
+    
+    if (err.message && err.message.includes('rate limit')) {
+      statusCode = 429;
+      errorMessage = 'Too many requests - please wait a moment and try again.';
+    } else if (err.message && err.message.includes('network')) {
+      statusCode = 503;
+      errorMessage = 'Network error - unable to connect to AI service. Please try again.';
+    } else if (err.message && err.message.includes('Invalid response')) {
+      statusCode = 502;
+      errorMessage = 'AI service returned an invalid response. Please try again.';
+    }
+    
+    return {
+      statusCode,
+      headers,
+      body: JSON.stringify({ error: errorMessage })
+    };
+  }
+};
+
+// Post-processing function to ensure natural, conversational tone
+function postProcessExplanation(explanation) {
+  // Remove common AI artifacts and make it more conversational
+  const artifactsToRemove = [
+    /^(Here's|Here is|This is|The following is|Let me explain|I'll explain|So,|Well,)\s+/i,
+    /\b(I think|I believe|It seems|It appears|Perhaps|Maybe|Possibly)\b/gi,
+    /\b(very very|really really|quite quite)\b/gi,
+    /\b(um|uh|er|ah)\b/gi,
+    /\.\.\.\s*$/,
+    /^[^\w]*/,
+    /[^\w\s.,!?;:'"()-]*$/
+  ];
+  
+  let cleaned = explanation;
+  artifactsToRemove.forEach(pattern => {
+    cleaned = cleaned.replace(pattern, '');
+  });
+  
+  // Fix formatting and ensure conversational flow
+  cleaned = cleaned
+    .replace(/\s+/g, ' ')
+    .replace(/([.!?])\s*([a-z])/g, '$1 $2')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .trim();
+  
+  // Ensure proper capitalization
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  
+  // Add conversational elements if missing
+  if (!cleaned.match(/\b(basically|essentially|think of it|imagine|it's like|you know)\b/i)) {
+    // The explanation might be too formal, but we'll keep it as is since the prompt should handle this
+  }
+  
+  // Final validation
+  if (cleaned.length < 20 || !cleaned.match(/[a-zA-Z]/)) {
+    cleaned = "I couldn't generate a clear explanation for that term. Could you try asking about it in a different way?";
+  }
+  
+  return cleaned;
+}
