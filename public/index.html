@@ -155,6 +155,18 @@
       z-index: 999;
       box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
       flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    
+    /* Header adapts to page theme */
+    .crypto-page .header {
+      border-bottom: 2px solid #ffd700;
+      box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
+    }
+    
+    .summarize-page.active .header {
+      border-bottom: 2px solid #8b5cf6;
+      box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
     }
     
     .header-text {
@@ -163,6 +175,27 @@
       font-weight: 600;
       text-decoration: none;
       transition: all 0.3s ease;
+    }
+    
+    /* Header text adapts to page theme */
+    .crypto-page .header-text {
+      color: #ffd700;
+    }
+    
+    .crypto-page .header-text:hover {
+      color: #ffed4e;
+      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+      transform: translateY(-1px);
+    }
+    
+    .summarize-page.active .header-text {
+      color: #8b5cf6;
+    }
+    
+    .summarize-page.active .header-text:hover {
+      color: #a78bfa;
+      text-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
+      transform: translateY(-1px);
     }
     
     .header-text:hover {
@@ -524,6 +557,16 @@
       justify-content: center;
       z-index: 999;
       flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    
+    /* Footer adapts to page theme */
+    .crypto-page .footer {
+      border-top: 1px solid rgba(255, 215, 0, 0.3);
+    }
+    
+    .summarize-page.active .footer {
+      border-top: 1px solid rgba(139, 92, 246, 0.3);
     }
     
     .footer-text {
@@ -532,6 +575,19 @@
       font-weight: 500;
       text-decoration: none;
       transition: all 0.3s ease;
+    }
+    
+    /* Footer text adapts to page theme */
+    .crypto-page .footer-text:hover {
+      color: #ffd700;
+      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+      transform: translateY(-1px);
+    }
+    
+    .summarize-page.active .footer-text:hover {
+      color: #8b5cf6;
+      text-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
+      transform: translateY(-1px);
     }
     
     .footer-text:hover {
