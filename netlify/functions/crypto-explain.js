@@ -70,7 +70,7 @@ Explain: ${cleanTerm}`;
         try {
           console.log(`API call attempt ${attempt}/${retries}`);
           
-          const timeoutMs = attempt === 1 ? 4000 : 3000; // More aggressive timeouts
+          const timeoutMs = 8000; // 8 seconds for all attempts
           
           const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
