@@ -107,7 +107,14 @@ Explain: ${cleanTerm}`;
               continue;
             }
             
-            throw new Error(`AI service error: ${errText}`);
+            // Handle specific error cases with friendly messages
+            if (llmRes.status === 429 || errText.includes('rate limit') || errText.includes('quota') || errText.includes('usage')) {
+              throw new Error('Site under maintenance, bear with us and try again later');
+            } else if (llmRes.status === 402 || errText.includes('insufficient') || errText.includes('credits')) {
+              throw new Error('Site under maintenance, bear with us and try again later');
+            } else {
+              throw new Error(`AI service error: ${errText}`);
+            }
           }
           
           return llmRes;
@@ -189,9 +196,12 @@ Explain: ${cleanTerm}`;
     let statusCode = 500;
     let errorMessage = err.message || 'Internal server error';
     
-    if (err.message && err.message.includes('rate limit')) {
-      statusCode = 429;
-      errorMessage = 'Too many requests - please wait a moment and try again.';
+    if (err.message && (err.message.includes('rate limit') || err.message.includes('Site under maintenance'))) {
+      statusCode = 503;
+      errorMessage = 'Site under maintenance, bear with us and try again later';
+    } else if (err.message && (err.message.includes('quota') || err.message.includes('usage') || err.message.includes('credits'))) {
+      statusCode = 503;
+      errorMessage = 'Site under maintenance, bear with us and try again later';
     } else if (err.message && err.message.includes('network')) {
       statusCode = 503;
       errorMessage = 'Network error - unable to connect to AI service. Please try again.';
