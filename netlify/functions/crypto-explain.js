@@ -70,7 +70,7 @@ Explain: ${cleanTerm}`;
         try {
           console.log(`API call attempt ${attempt}/${retries}`);
           
-          const timeoutMs = 8000; // Increased to 8 seconds for all attempts
+          const timeoutMs = attempt === 1 ? 4000 : 3000; // More aggressive timeouts
           
           const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
@@ -103,7 +103,7 @@ Explain: ${cleanTerm}`;
             
             if (llmRes.status >= 500 && attempt < retries) {
               console.log(`Retrying due to server error (${llmRes.status})...`);
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Increased retry delay
+              await new Promise(resolve => setTimeout(resolve, 500)); // Retry delay
               continue;
             }
             
@@ -124,7 +124,7 @@ Explain: ${cleanTerm}`;
           
           if ((error.message === 'Request timeout' || error.message.includes('fetch') || error.code === 'ECONNRESET') && attempt < retries) {
             console.log(`Retrying due to ${error.message}...`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Increased retry delay
+            await new Promise(resolve => setTimeout(resolve, 300)); // Retry delay
             continue;
           }
           
