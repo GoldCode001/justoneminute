@@ -107,6 +107,48 @@
     }
     
     /* Page Containers */
+    /* Speaker Button */
+    .speaker-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10001;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+    }
+    
+    .speaker-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 24px rgba(255, 215, 0, 0.3);
+      border-color: rgba(255, 215, 0, 0.6);
+    }
+    
+    .speaker-btn:active {
+      transform: scale(1.05);
+    }
+    
+    .speaker-btn.muted {
+      background: linear-gradient(135deg, #4a1a1a 0%, #5a2a2a 100%);
+      border-color: rgba(255, 107, 107, 0.3);
+    }
+    
+    .speaker-btn.muted:hover {
+      border-color: rgba(255, 107, 107, 0.6);
+      box-shadow: 0 6px 24px rgba(255, 107, 107, 0.3);
+    }
+    
     .page {
       width: 100%;
       height: 100vh;
@@ -769,6 +811,14 @@
         font-size: 1.5em;
       }
       
+      .speaker-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1em;
+        top: 15px;
+        left: 15px;
+      }
+      
       .page {
         width: 100%;
         height: 100vh;
@@ -834,6 +884,18 @@
 <body>
   <!-- Interactive Aura Element -->
   <div id="aura" class="aura"></div>
+  
+  <!-- Audio Player -->
+  <audio id="backgroundMusic" loop preload="auto">
+    <!-- You'll need to replace this with an actual audio file -->
+    <!-- <source src="path-to-your-audio-file.mp3" type="audio/mpeg"> -->
+    <!-- <source src="path-to-your-audio-file.ogg" type="audio/ogg"> -->
+  </audio>
+  
+  <!-- Speaker Control Button -->
+  <button type="button" id="speakerBtn" class="speaker-btn" title="Toggle Music">
+    <span id="speakerIcon">🔊</span>
+  </button>
   
   <!-- Page Switcher - Floating Orbs -->
   <div class="page-switcher">
@@ -955,6 +1017,76 @@
   const aura = document.getElementById('aura');
   let isInteracting = false;
   let auraTimeout;
+  
+  // Audio Control
+  const backgroundMusic = document.getElementById('backgroundMusic');
+  const speakerBtn = document.getElementById('speakerBtn');
+  const speakerIcon = document.getElementById('speakerIcon');
+  let isMuted = true; // Start muted to comply with browser autoplay policies
+  
+  // Initialize audio controls
+  if (backgroundMusic && speakerBtn && speakerIcon) {
+    // Set initial state
+    backgroundMusic.volume = 0.3; // Set to 30% volume
+    backgroundMusic.muted = isMuted;
+    speakerIcon.textContent = isMuted ? '🔇' : '🔊';
+    if (isMuted) speakerBtn.classList.add('muted');
+    
+    // Speaker button click handler
+    speakerBtn.addEventListener('click', async () => {
+      try {
+        if (isMuted) {
+          // Unmute and play
+          backgroundMusic.muted = false;
+          await backgroundMusic.play();
+          speakerIcon.textContent = '🔊';
+          speakerBtn.classList.remove('muted');
+          isMuted = false;
+        } else {
+          // Mute and pause
+          backgroundMusic.muted = true;
+          backgroundMusic.pause();
+          speakerIcon.textContent = '🔇';
+          speakerBtn.classList.add('muted');
+          isMuted = true;
+        }
+      } catch (error) {
+        console.log('Audio playback failed:', error);
+        // If audio fails, just toggle the visual state
+        speakerIcon.textContent = isMuted ? '🔊' : '🔇';
+        speakerBtn.classList.toggle('muted');
+        isMuted = !isMuted;
+      }
+    });
+    
+    // Handle audio events
+    backgroundMusic.addEventListener('canplaythrough', () => {
+      console.log('Audio ready to play');
+    });
+    
+    backgroundMusic.addEventListener('error', (e) => {
+      console.log('Audio error:', e);
+      // Hide speaker button if audio fails to load
+      speakerBtn.style.display = 'none';
+    });
+    
+    // Try to start playing when user first interacts with the page
+    let hasInteracted = false;
+    const startAudioOnInteraction = async () => {
+      if (!hasInteracted && !isMuted) {
+        hasInteracted = true;
+        try {
+          await backgroundMusic.play();
+        } catch (error) {
+          console.log('Auto-play failed, waiting for user interaction');
+        }
+      }
+    };
+    
+    // Listen for first user interaction
+    document.addEventListener('click', startAudioOnInteraction, { once: true });
+    document.addEventListener('keydown', startAudioOnInteraction, { once: true });
+  }
   
   function updateAuraPosition(x, y) {
     if (aura) {
