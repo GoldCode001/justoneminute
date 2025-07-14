@@ -90,7 +90,7 @@ Explain: ${cleanTerm}`;
                 role: 'user', 
                 content: prompt
               }],
-              max_tokens: 200, // Keep it concise but informative
+              max_tokens: 24, // Reduced to match available credits
               temperature: 0.8 // Higher temperature for more natural, conversational responses
             })
           });
