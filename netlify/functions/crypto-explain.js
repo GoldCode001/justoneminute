@@ -91,6 +91,7 @@ Explain: ${cleanTerm}`;
                 content: prompt
               }],
               max_tokens: 24, // Reduced to match available credits
+              max_tokens: 150, // Reasonable length for explanations
               temperature: 0.8 // Higher temperature for more natural, conversational responses
             })
           });
