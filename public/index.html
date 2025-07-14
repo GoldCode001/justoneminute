@@ -49,36 +49,58 @@
       flex-direction: column;
     }
     
-    /* Floating Summarizer Button */
-    .summarizer-orb {
+    /* Floating Orbs - Two vertically aligned on the right */
+    .floating-orbs {
       position: fixed;
       top: 50%;
       right: 30px;
       transform: translateY(-50%);
       z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .orb {
       width: 70px;
       height: 70px;
       border-radius: 50%;
       border: none;
       cursor: pointer;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.8em;
-      color: #fff;
       font-weight: 700;
       text-decoration: none;
     }
     
-    .summarizer-orb:hover {
+    .dictionary-orb {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      color: #0a0a0a;
+      box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+    }
+    
+    .summarizer-orb {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+      color: #fff;
+      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
+    }
+    
+    .orb:hover {
       transform: translateY(-50%) scale(1.15);
+    }
+    
+    .dictionary-orb:hover {
+      box-shadow: 0 12px 48px rgba(255, 215, 0, 0.5);
+    }
+    
+    .summarizer-orb:hover {
       box-shadow: 0 12px 48px rgba(139, 92, 246, 0.5);
     }
     
-    .summarizer-orb:active {
+    .orb:active {
       transform: translateY(-50%) scale(1.05);
     }
     
@@ -442,8 +464,11 @@
     
     /* Mobile Responsive */
     @media (max-width: 768px) {
-      .summarizer-orb {
+      .floating-orbs {
         right: 15px;
+      }
+      
+      .orb {
         width: 60px;
         height: 60px;
         font-size: 1.5em;
@@ -475,10 +500,15 @@
   </style>
 </head>
 <body>
-  <!-- Floating Summarizer Button -->
-  <a href="/summarizer" class="summarizer-orb" title="Go to Summarizer">
-    ∑
-  </a>
+  <!-- Floating Orbs - Two vertically aligned -->
+  <div class="floating-orbs">
+    <a href="/" class="orb dictionary-orb" title="Crypto Dictionary">
+      ₿
+    </a>
+    <a href="/summarizer" class="orb summarizer-orb" title="Summarizer">
+      ∑
+    </a>
+  </div>
   
   <!-- Audio element -->
   <audio id="backgroundAudio" loop preload="auto">
