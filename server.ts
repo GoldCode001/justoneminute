@@ -343,7 +343,6 @@ Keep it comprehensive but digestible - aim for 2-4 paragraphs that really help s
                 role: 'user', 
                 content: prompt
               }],
-              max_tokens: 24,
               max_tokens: 150,
               temperature: 0.8
             }),
