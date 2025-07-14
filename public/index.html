@@ -95,40 +95,38 @@
     /* Touch aura/ripple effects */
     .touch-aura {
       position: absolute;
-      background: radial-gradient(ellipse 80px 60px at 40% 30%, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0.6) 20%, rgba(255, 215, 0, 0.4) 40%, rgba(255, 215, 0, 0.2) 60%, rgba(255, 215, 0, 0.1) 80%, transparent 100%);
+      background: radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.9) 0%, rgba(255, 215, 0, 0.7) 15%, rgba(255, 215, 0, 0.5) 30%, rgba(255, 215, 0, 0.3) 45%, rgba(255, 215, 0, 0.1) 60%, transparent 100%);
       pointer-events: none;
       opacity: 1;
       animation: aura-fade 1.2s ease-out;
       z-index: 10001;
-      width: 120px;
-      height: 90px;
-      border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
-      filter: blur(8px);
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      filter: blur(20px);
+      transform-origin: center;
     }
     
     .touch-aura.purple {
-      background: radial-gradient(ellipse 80px 60px at 60% 40%, rgba(139, 92, 246, 0.8) 0%, rgba(139, 92, 246, 0.6) 20%, rgba(139, 92, 246, 0.4) 40%, rgba(139, 92, 246, 0.2) 60%, rgba(139, 92, 246, 0.1) 80%, transparent 100%);
+      background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.9) 0%, rgba(139, 92, 246, 0.7) 15%, rgba(139, 92, 246, 0.5) 30%, rgba(139, 92, 246, 0.3) 45%, rgba(139, 92, 246, 0.1) 60%, transparent 100%);
     }
     
     @keyframes aura-fade {
       0% {
         opacity: 1;
-        transform: scale(0.8) rotate(0deg);
+        transform: scale(0.3);
       }
       30% {
-        opacity: 0.8;
-        transform: scale(1) rotate(15deg);
-        border-radius: 40% 60% 50% 70% / 60% 40% 50% 60%;
+        opacity: 0.7;
+        transform: scale(0.8);
       }
       60% {
-        opacity: 0.4;
-        transform: scale(1.1) rotate(-10deg);
-        border-radius: 70% 30% 60% 40% / 40% 70% 30% 60%;
+        opacity: 0.3;
+        transform: scale(1.2);
       }
       100% {
         opacity: 0;
-        transform: scale(1.2) rotate(20deg);
-        border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+        transform: scale(1.5);
       }
     }
     
@@ -196,7 +194,7 @@
     .header {
       height: 60px;
       background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-      border-bottom: 2px solid var(--accent-color, #ffd700);
+      border-bottom: 2px solid #ffd700;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -211,17 +209,26 @@
     }
     
     .header-text {
-      color: var(--accent-color, #ffd700);
+      color: #ffd700;
       font-size: 1.1em;
       font-weight: 600;
       text-decoration: none;
       transition: all 0.3s ease;
     }
     
+    .header.summarizer-mode .header-text {
+      color: #8b5cf6;
+    }
+    
     .header-text:hover {
-      color: var(--accent-hover, #ffed4e);
+      color: #ffed4e;
       text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
       transform: translateY(-1px);
+    }
+    
+    .header.summarizer-mode .header-text:hover {
+      color: #a78bfa;
+      text-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
     }
     
     /* Main Content */
@@ -310,7 +317,7 @@
     
     .search-input:focus, input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: var(--accent-color, #ffd700);
+      border-color: #ffd700;
       box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
       transform: translateY(-2px);
     }
@@ -339,8 +346,8 @@
       width: 100%; 
       padding: 18px 24px; 
       margin-top: 16px; 
-      background: linear-gradient(135deg, var(--accent-color, #ffd700) 0%, var(--accent-hover, #ffed4e) 50%, var(--accent-color, #ffd700) 100%);
-      color: var(--btn-text, #0a0a0a); 
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      color: #0a0a0a; 
       font-size: 1.2em; 
       font-weight: 700;
       border: none; 
@@ -400,7 +407,7 @@
     }
     
     .response-display strong { 
-      color: var(--accent-color, #ffd700); 
+      color: #ffd700; 
       font-weight: 700;
       text-shadow: 0 1px 2px rgba(255, 215, 0, 0.3);
     }
@@ -411,7 +418,7 @@
     }
     
     .response-display em { 
-      color: var(--accent-hover, #ffed4e); 
+      color: #ffed4e; 
       font-style: italic; 
     }
     
@@ -421,7 +428,7 @@
     
     .response-display code {
       background: rgba(255, 215, 0, 0.1);
-      color: var(--accent-color, #ffd700);
+      color: #ffd700;
       padding: 2px 6px;
       border-radius: 4px;
       font-family: 'Courier New', monospace;
@@ -447,11 +454,11 @@
       padding: 12px 24px; 
       margin-top: 16px; 
       background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
-      color: var(--accent-color, #ffd700);
+      color: #ffd700;
       font-size: 1em; 
       font-weight: 600;
       border-radius: 12px;
-      border: 2px solid var(--accent-color, #ffd700);
+      border: 2px solid #ffd700;
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
       cursor: pointer;
       transition: all 0.3s ease;
@@ -464,7 +471,7 @@
     }
     
     .copy-btn:hover {
-      background: linear-gradient(135deg, var(--accent-color, #ffd700) 0%, var(--accent-hover, #ffed4e) 100%);
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
       color: #0a0a0a;
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
@@ -546,9 +553,14 @@
     }
     
     .footer-text:hover {
-      color: var(--accent-color, #ffd700);
+      color: #ffd700;
       text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
       transform: translateY(-1px);
+    }
+    
+    .footer.summarizer-mode .footer-text:hover {
+      color: #8b5cf6;
+      text-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
     }
     
     /* Loading animation */
@@ -664,6 +676,7 @@
   </div>
   
   <div class="footer">
+  <div class="footer" id="footer">
     <a href="https://x.com/goldmancreates" target="_blank" class="footer-text">...made with 🖤 by goldman</a>
   </div>
   
@@ -732,6 +745,11 @@
   function createTouchAura(event, isPurple = false) {
     if (!event) return;
     
+    // Auto-detect color based on current section if not specified
+    if (!isPurple && currentSection === 'summarizer') {
+      isPurple = true;
+    }
+    
     const aura = document.createElement('div');
     aura.className = `touch-aura ${isPurple ? 'purple' : ''}`;
     
@@ -746,8 +764,8 @@
     }
     
     // Position the aura at the click/touch point
-    aura.style.left = (clientX - 60) + 'px'; // 60 = half of 120px width
-    aura.style.top = (clientY - 45) + 'px';  // 45 = half of 90px height
+    aura.style.left = (clientX - 50) + 'px'; // 50 = half of 100px width
+    aura.style.top = (clientY - 50) + 'px';  // 50 = half of 100px height
     
     document.body.appendChild(aura);
     
@@ -776,6 +794,7 @@
     const dictionaryOrb = document.querySelector('.dictionary-orb');
     const summarizerOrb = document.querySelector('.summarizer-orb');
     const header = document.getElementById('header');
+    const footer = document.getElementById('footer');
     
     if (sectionName === 'dictionary') {
       // Slide to dictionary (left)
@@ -792,6 +811,7 @@
         
         // Update header theme
         header.classList.remove('summarizer-mode');
+        footer.classList.remove('summarizer-mode');
         
         currentSection = 'dictionary';
       }, 250);
@@ -811,6 +831,7 @@
         
         // Update header theme
         header.classList.add('summarizer-mode');
+        footer.classList.add('summarizer-mode');
         
         currentSection = 'summarizer';
       }, 250);
