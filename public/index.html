@@ -95,31 +95,40 @@
     /* Touch aura/ripple effects */
     .touch-aura {
       position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0.3) 30%, rgba(255, 215, 0, 0.1) 60%, transparent 100%);
+      background: radial-gradient(ellipse 80px 60px at 40% 30%, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0.6) 20%, rgba(255, 215, 0, 0.4) 40%, rgba(255, 215, 0, 0.2) 60%, rgba(255, 215, 0, 0.1) 80%, transparent 100%);
       pointer-events: none;
-      transform: scale(0);
-      animation: aura-expand 0.8s ease-out;
+      opacity: 1;
+      animation: aura-fade 1.2s ease-out;
       z-index: 10001;
-      width: 60px;
-      height: 60px;
+      width: 120px;
+      height: 90px;
+      border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
+      filter: blur(8px);
     }
     
     .touch-aura.purple {
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.3) 30%, rgba(139, 92, 246, 0.1) 60%, transparent 100%);
+      background: radial-gradient(ellipse 80px 60px at 60% 40%, rgba(139, 92, 246, 0.8) 0%, rgba(139, 92, 246, 0.6) 20%, rgba(139, 92, 246, 0.4) 40%, rgba(139, 92, 246, 0.2) 60%, rgba(139, 92, 246, 0.1) 80%, transparent 100%);
     }
     
-    @keyframes aura-expand {
+    @keyframes aura-fade {
       0% {
-        transform: scale(0);
         opacity: 1;
+        transform: scale(0.8) rotate(0deg);
       }
-      50% {
+      30% {
         opacity: 0.8;
+        transform: scale(1) rotate(15deg);
+        border-radius: 40% 60% 50% 70% / 60% 40% 50% 60%;
+      }
+      60% {
+        opacity: 0.4;
+        transform: scale(1.1) rotate(-10deg);
+        border-radius: 70% 30% 60% 40% / 40% 70% 30% 60%;
       }
       100% {
-        transform: scale(2.5);
         opacity: 0;
+        transform: scale(1.2) rotate(20deg);
+        border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
       }
     }
     
@@ -737,8 +746,8 @@
     }
     
     // Position the aura at the click/touch point
-    aura.style.left = (clientX - 30) + 'px'; // 30 = half of 60px width
-    aura.style.top = (clientY - 30) + 'px';  // 30 = half of 60px height
+    aura.style.left = (clientX - 60) + 'px'; // 60 = half of 120px width
+    aura.style.top = (clientY - 45) + 'px';  // 45 = half of 90px height
     
     document.body.appendChild(aura);
     
@@ -747,7 +756,7 @@
       if (aura && aura.parentNode) {
         document.body.removeChild(aura);
       }
-    }, 800);
+    }, 1200);
   }
   
   console.log('Single page app loaded');
