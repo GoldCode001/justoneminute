@@ -886,8 +886,9 @@
   <div id="aura" class="aura"></div>
   
   <!-- Audio Player -->
-  <audio id="backgroundMusic" loop preload="auto">
-    <source src="OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mpeg">
+  <audio id="backgroundMusic" loop preload="auto" crossorigin="anonymous">
+    <source src="./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mpeg">
+    <source src="/OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mpeg">
   </audio>
   
   <!-- Speaker Control Button -->
@@ -1034,17 +1035,37 @@
     // Speaker button click handler
     speakerBtn.addEventListener('click', async () => {
       console.log('Speaker button clicked, current muted state:', isMuted);
+      
+      // Check if audio source is loaded
+      if (backgroundMusic.readyState === 0) {
+        console.log('Audio not loaded, attempting to load...');
+        backgroundMusic.load();
+        await new Promise(resolve => {
+          backgroundMusic.addEventListener('loadeddata', resolve, { once: true });
+        });
+      }
+      
       try {
         if (isMuted) {
           // Unmute and play
           console.log('Attempting to unmute and play...');
           backgroundMusic.muted = false;
+          backgroundMusic.volume = 0.3; // Ensure volume is set
           backgroundMusic.currentTime = 0; // Reset to beginning
+          
+          // Force focus on audio element for mobile
+          backgroundMusic.focus();
+          
           const playPromise = backgroundMusic.play();
           
           if (playPromise !== undefined) {
-            await playPromise;
-            console.log('Audio started playing successfully');
+            try {
+              await playPromise;
+              console.log('Audio started playing successfully');
+            } catch (playError) {
+              console.error('Play promise rejected:', playError);
+              throw playError;
+            }
           }
           
           speakerIcon.textContent = '🔊';
@@ -1054,8 +1075,8 @@
         } else {
           // Mute and pause
           console.log('Muting audio...');
-          backgroundMusic.muted = true;
           backgroundMusic.pause();
+          backgroundMusic.muted = true;
           speakerIcon.textContent = '🔇';
           speakerBtn.classList.add('muted');
           isMuted = true;
@@ -1064,37 +1085,70 @@
       } catch (error) {
         console.error('Audio playback failed:', error);
         
-        // Try alternative approach for mobile
-        if (isMuted) {
+        // Enhanced mobile fallback
+        if (isMuted && !error.message.includes('pause')) {
           try {
             console.log('Trying alternative mobile approach...');
+            
+            // Create new audio element as fallback
+            const newAudio = new Audio('./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3');
+            newAudio.loop = true;
+            newAudio.volume = 0.3;
+            newAudio.crossOrigin = 'anonymous';
+            
+            const newPlayPromise = newAudio.play();
+            if (newPlayPromise) {
+              await newPlayPromise;
+              console.log('New audio element worked');
+              
+              // Replace the old audio element
+              backgroundMusic.src = newAudio.src;
+              backgroundMusic.load();
+              
+              speakerIcon.textContent = '🔊';
+              speakerBtn.classList.remove('muted');
+              isMuted = false;
+              return;
+            }
+          } catch (newAudioError) {
+            console.error('New audio element failed:', newAudioError);
+          }
+          
+          // Original fallback approach
+          try {
             backgroundMusic.load(); // Reload the audio
             backgroundMusic.muted = false;
             backgroundMusic.volume = 0.3;
             
-            // Force play with user gesture
+            // Wait for audio to be ready
+            await new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => reject(new Error('Load timeout')), 5000);
+              backgroundMusic.addEventListener('canplaythrough', () => {
+                clearTimeout(timeout);
+                resolve();
+              }, { once: true });
+            });
+            
             const altPlayPromise = backgroundMusic.play();
             if (altPlayPromise) {
-              altPlayPromise.then(() => {
-                console.log('Alternative play method worked');
-                speakerIcon.textContent = '🔊';
-                speakerBtn.classList.remove('muted');
-                isMuted = false;
-              }).catch((altError) => {
-                console.error('Alternative play method also failed:', altError);
-                // Show user feedback
-                speakerIcon.textContent = '❌';
-                setTimeout(() => {
-                  speakerIcon.textContent = '🔇';
-                }, 1000);
-              });
+              await altPlayPromise;
+              console.log('Alternative play method worked');
+              speakerIcon.textContent = '🔊';
+              speakerBtn.classList.remove('muted');
+              isMuted = false;
             }
           } catch (altError) {
             console.error('Alternative method failed:', altError);
-            speakerIcon.textContent = '❌';
+            // Show user feedback
+            speakerIcon.textContent = '⚠️';
             setTimeout(() => {
               speakerIcon.textContent = '🔇';
-            }, 1000);
+              // Try to hide the button if it consistently fails
+              if (altError.message.includes('not supported')) {
+                speakerBtn.style.opacity = '0.5';
+                speakerBtn.title = 'Audio not supported on this device';
+              }
+            }, 2000);
           }
         } else {
           // Muting should always work
