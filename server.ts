@@ -338,7 +338,7 @@ Keep it comprehensive but digestible - aim for 2-4 paragraphs that really help s
               'X-Title': 'Goldman Crypto Dictionary'
             },
             body: JSON.stringify({
-              model: 'openai/gpt-4o-2024-11-20',
+              model: 'mistralai/mistral-small-3.2-24b-instruct',
               messages: [{ 
                 role: 'user', 
                 content: prompt
