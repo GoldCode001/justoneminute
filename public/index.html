@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Goldman's Crypto Dictionary</title>
+  <title>Just One Minute with Goldman</title>
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='grad' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' style='stop-color:%23ffd700;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ffed4e;stop-opacity:1' /%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)' stroke='%23000' stroke-width='2'/%3E%3Ctext x='50' y='70' font-family='Arial,sans-serif' font-size='50' font-weight='bold' text-anchor='middle' fill='%23000'%3E₿%3C/text%3E%3C/svg%3E">
@@ -625,9 +625,9 @@
     <!-- Dictionary Section -->
     <div class="page-section dictionary-section active" id="dictionarySection">
       <div class="container">
-        <h1 class="main-title">goldman</h1>
+        <h1 class="main-title">just one minute</h1>
+        <h2 style="font-size: 1.8em; color: #ffd700; margin: -10px 0 20px 0; font-weight: 600;">with goldman</h2>
         <p class="subtitle">ask me anything about crypto, defi, web3, or blockchain</p>
-        <p class="subtitle" style="font-size: 0.9em; margin-top: -20px; margin-bottom: 40px; opacity: 0.8;">...all you need is one minute.</p>
         
         <div class="search-section">
           <div class="search-container">
@@ -679,10 +679,13 @@
   // Audio setup - Using the Odumodublvck track
   // Create audio element with multiple source support
   const backgroundAudio = document.createElement('audio');
-  backgroundAudio.innerHTML = `
-    <source src="./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mpeg">
-    <source src="./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mp3">
-  `;
+  
+  // Try multiple approaches to load the audio
+  const audioFileName = 'OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3';
+  
+  // Method 1: Direct src assignment
+  backgroundAudio.src = audioFileName;
+  backgroundAudio.preload = 'auto';
   backgroundAudio.loop = true;
   backgroundAudio.volume = 0.2;
   
@@ -895,7 +898,7 @@
     }
     
     // Test audio file accessibility
-    fetch('./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3', { 
+    fetch(audioFileName, { 
       method: 'HEAD',
       cache: 'no-cache'
     })
@@ -904,13 +907,19 @@
           console.log('Audio file is accessible');
           console.log('Content-Type:', response.headers.get('content-type'));
           console.log('Content-Length:', response.headers.get('content-length'));
+          
+          // If it's being served as text/html, there's a server issue
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('text/html')) {
+            console.error('CRITICAL: Audio file is being served as HTML instead of audio!');
+            console.error('This means the file is not properly deployed or server config is wrong');
+          }
         } else {
           console.error('Audio file not found:', response.status);
         }
       })
       .catch(err => {
         console.error('Error checking audio file:', err);
-        console.error('This might indicate a network or file access issue');
       });
     
     setTimeout(() => {
