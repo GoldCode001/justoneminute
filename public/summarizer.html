@@ -105,15 +105,20 @@
     
     /* Smooth page transitions */
     .page-transition {
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    .page-transition.fade-out {
+    .page-transition.slide-out-left {
       opacity: 0;
-      transform: translateX(30px);
+      transform: translateX(-100px);
     }
     
-    .page-transition.fade-in {
+    .page-transition.slide-out-right {
+      opacity: 0;
+      transform: translateX(100px);
+    }
+    
+    .page-transition.slide-in {
       opacity: 1;
       transform: translateX(0);
     }
@@ -696,15 +701,21 @@
     orb.addEventListener('click', (e) => {
       e.preventDefault();
       const href = orb.getAttribute('href');
-      
-      // Add fade out effect
       const container = document.querySelector('.container');
-      container.classList.add('fade-out');
+      
+      // Determine slide direction based on destination
+      if (href === '/summarizer') {
+        // Slide right when going to summarizer
+        container.classList.add('slide-out-right');
+      } else {
+        // Slide left when going to dictionary
+        container.classList.add('slide-out-left');
+      }
       
       // Navigate after animation
       setTimeout(() => {
         window.location.href = href;
-      }, 300);
+      }, 500);
     });
   });
 </script>
