@@ -1026,64 +1026,122 @@
   if (backgroundMusic && speakerBtn && speakerIcon) {
     // Set initial state
     backgroundMusic.volume = 0.3; // Set to 30% volume
-    backgroundMusic.muted = isMuted;
+    backgroundMusic.muted = true;
+    backgroundMusic.pause(); // Ensure it starts paused
     speakerIcon.textContent = isMuted ? '🔇' : '🔊';
     if (isMuted) speakerBtn.classList.add('muted');
     
     // Speaker button click handler
     speakerBtn.addEventListener('click', async () => {
+      console.log('Speaker button clicked, current muted state:', isMuted);
       try {
         if (isMuted) {
           // Unmute and play
+          console.log('Attempting to unmute and play...');
           backgroundMusic.muted = false;
-          await backgroundMusic.play();
+          backgroundMusic.currentTime = 0; // Reset to beginning
+          const playPromise = backgroundMusic.play();
+          
+          if (playPromise !== undefined) {
+            await playPromise;
+            console.log('Audio started playing successfully');
+          }
+          
           speakerIcon.textContent = '🔊';
           speakerBtn.classList.remove('muted');
           isMuted = false;
+          console.log('Successfully unmuted');
         } else {
           // Mute and pause
+          console.log('Muting audio...');
           backgroundMusic.muted = true;
           backgroundMusic.pause();
           speakerIcon.textContent = '🔇';
           speakerBtn.classList.add('muted');
           isMuted = true;
+          console.log('Successfully muted');
         }
       } catch (error) {
-        console.log('Audio playback failed:', error);
-        // If audio fails, just toggle the visual state
-        speakerIcon.textContent = isMuted ? '🔊' : '🔇';
-        speakerBtn.classList.toggle('muted');
-        isMuted = !isMuted;
+        console.error('Audio playback failed:', error);
+        
+        // Try alternative approach for mobile
+        if (isMuted) {
+          try {
+            console.log('Trying alternative mobile approach...');
+            backgroundMusic.load(); // Reload the audio
+            backgroundMusic.muted = false;
+            backgroundMusic.volume = 0.3;
+            
+            // Force play with user gesture
+            const altPlayPromise = backgroundMusic.play();
+            if (altPlayPromise) {
+              altPlayPromise.then(() => {
+                console.log('Alternative play method worked');
+                speakerIcon.textContent = '🔊';
+                speakerBtn.classList.remove('muted');
+                isMuted = false;
+              }).catch((altError) => {
+                console.error('Alternative play method also failed:', altError);
+                // Show user feedback
+                speakerIcon.textContent = '❌';
+                setTimeout(() => {
+                  speakerIcon.textContent = '🔇';
+                }, 1000);
+              });
+            }
+          } catch (altError) {
+            console.error('Alternative method failed:', altError);
+            speakerIcon.textContent = '❌';
+            setTimeout(() => {
+              speakerIcon.textContent = '🔇';
+            }, 1000);
+          }
+        } else {
+          // Muting should always work
+          backgroundMusic.pause();
+          backgroundMusic.muted = true;
+          speakerIcon.textContent = '🔇';
+          speakerBtn.classList.add('muted');
+          isMuted = true;
+        }
       }
     });
     
     // Handle audio events
+    backgroundMusic.addEventListener('loadstart', () => {
+      console.log('Audio loading started');
+    });
+    
+    backgroundMusic.addEventListener('loadeddata', () => {
+      console.log('Audio data loaded');
+    });
+    
     backgroundMusic.addEventListener('canplaythrough', () => {
-      console.log('Audio ready to play');
+      console.log('Audio ready to play through');
+    });
+    
+    backgroundMusic.addEventListener('play', () => {
+      console.log('Audio started playing');
+    });
+    
+    backgroundMusic.addEventListener('pause', () => {
+      console.log('Audio paused');
+    });
+    
+    backgroundMusic.addEventListener('ended', () => {
+      console.log('Audio ended, should loop');
     });
     
     backgroundMusic.addEventListener('error', (e) => {
-      console.log('Audio error:', e);
+      console.error('Audio error:', e, backgroundMusic.error);
       // Hide speaker button if audio fails to load
-      speakerBtn.style.display = 'none';
+      speakerIcon.textContent = '❌';
+      setTimeout(() => {
+        speakerBtn.style.display = 'none';
+      }, 3000);
     });
-    
-    // Try to start playing when user first interacts with the page
-    let hasInteracted = false;
-    const startAudioOnInteraction = async () => {
-      if (!hasInteracted && !isMuted) {
-        hasInteracted = true;
-        try {
-          await backgroundMusic.play();
-        } catch (error) {
-          console.log('Auto-play failed, waiting for user interaction');
-        }
-      }
-    };
-    
-    // Listen for first user interaction
-    document.addEventListener('click', startAudioOnInteraction, { once: true });
-    document.addEventListener('keydown', startAudioOnInteraction, { once: true });
+  } else {
+    console.error('Audio elements not found');
   }
   
   function updateAuraPosition(x, y) {
