@@ -677,33 +677,145 @@
   </div>
   
 <script>
-  // Audio setup
-  const backgroundAudio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
+  // Audio setup - Using the Odumodublvck track
+  const backgroundAudio = new Audio('./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3');
   backgroundAudio.loop = true;
-  backgroundAudio.volume = 0.3;
+  backgroundAudio.volume = 0.2; // Lower volume for background music
   backgroundAudio.preload = 'auto';
   
-  // Auto-play audio (with user interaction fallback)
+  // Audio permission and initialization
   let audioStarted = false;
+  let audioPermissionGranted = false;
+  
+  // Create audio permission popup
+  function createAudioPermissionPopup() {
+    const popup = document.createElement('div');
+    popup.id = 'audioPermissionPopup';
+    popup.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      backdrop-filter: blur(10px);
+    `;
+    
+    popup.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        border: 2px solid #ffd700;
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        max-width: 400px;
+        box-shadow: 0 20px 60px rgba(255, 215, 0, 0.3);
+      ">
+        <h2 style="
+          color: #ffd700;
+          margin-bottom: 20px;
+          font-size: 1.5em;
+          font-weight: 700;
+        ">🎵 Enhanced Experience</h2>
+        <p style="
+          color: #ccc;
+          margin-bottom: 30px;
+          line-height: 1.6;
+          font-size: 1.1em;
+        ">This site includes background music to enhance your experience.<br><br>Click "Allow Audio" to enable sound.</p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+          <button id="allowAudioBtn" style="
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #0a0a0a;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+          ">🔊 Allow Audio</button>
+          <button id="skipAudioBtn" style="
+            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+            color: #ccc;
+            border: 2px solid #555;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+          ">Skip</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Add hover effects
+    const allowBtn = popup.querySelector('#allowAudioBtn');
+    const skipBtn = popup.querySelector('#skipAudioBtn');
+    
+    allowBtn.addEventListener('mouseenter', () => {
+      allowBtn.style.transform = 'translateY(-2px)';
+      allowBtn.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.4)';
+    });
+    
+    allowBtn.addEventListener('mouseleave', () => {
+      allowBtn.style.transform = 'translateY(0)';
+      allowBtn.style.boxShadow = 'none';
+    });
+    
+    skipBtn.addEventListener('mouseenter', () => {
+      skipBtn.style.transform = 'translateY(-2px)';
+      skipBtn.style.boxShadow = '0 8px 20px rgba(85, 85, 85, 0.4)';
+    });
+    
+    skipBtn.addEventListener('mouseleave', () => {
+      skipBtn.style.transform = 'translateY(0)';
+      skipBtn.style.boxShadow = 'none';
+    });
+    
+    // Handle button clicks
+    allowBtn.addEventListener('click', () => {
+      audioPermissionGranted = true;
+      startAudio();
+      document.body.removeChild(popup);
+    });
+    
+    skipBtn.addEventListener('click', () => {
+      audioPermissionGranted = false;
+      document.body.removeChild(popup);
+    });
+  }
+  
   function startAudio() {
     if (!audioStarted) {
       backgroundAudio.play()
         .then(() => {
-          console.log('Audio started successfully');
+          console.log('Odumodublvck track started successfully');
+          audioStarted = true;
         })
         .catch(err => {
-          console.log('Audio autoplay blocked, will start on user interaction:', err);
+          console.log('Audio failed to start:', err);
+          // Try again after a short delay
+          setTimeout(() => {
+            backgroundAudio.play().catch(e => console.log('Retry failed:', e));
+          }, 1000);
         });
-      audioStarted = true;
     }
   }
   
-  // Try to start audio immediately
-  startAudio();
-  
-  // Start audio on first user interaction
-  document.addEventListener('click', startAudio, { once: true });
-  document.addEventListener('touchstart', startAudio, { once: true });
+  // Show audio permission popup when page loads
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      createAudioPermissionPopup();
+    }, 1000); // Show popup after 1 second
+  });
   
   // Global click/touch aura effect - appears anywhere user clicks
   document.addEventListener('click', (e) => {
@@ -728,11 +840,14 @@
     createTouchAura(e);
     
     if (isMuted) {
-      backgroundAudio.volume = 0.3;
+      backgroundAudio.volume = 0.2;
       muteBtn.textContent = '🔊';
       muteBtn.classList.remove('muted');
       muteBtn.title = 'Mute';
       isMuted = false;
+      if (audioPermissionGranted && !audioStarted) {
+        startAudio();
+      }
     } else {
       backgroundAudio.volume = 0;
       muteBtn.textContent = '🔇';
