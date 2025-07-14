@@ -1017,17 +1017,111 @@
   let isInteracting = false;
   let auraTimeout;
   
+  let audioReady = false;
   // Audio Control
   const backgroundMusic = document.getElementById('backgroundMusic');
   const speakerBtn = document.getElementById('speakerBtn');
   const speakerIcon = document.getElementById('speakerIcon');
-  let isMuted = true; // Start muted to comply with browser autoplay policies
-  
-  // Initialize audio controls
-  if (backgroundMusic && speakerBtn && speakerIcon) {
-    // Set initial state
-    backgroundMusic.volume = 0.3; // Set to 30% volume
+  // Comprehensive audio initialization
+  function initializeAudio() {
+    if (!backgroundMusic) {
+      console.error('Audio element not found');
+      return;
+    }
+
+    console.log('Setting up audio element...');
+    
+    // Set basic properties
+    backgroundMusic.volume = 0.3;
+    backgroundMusic.loop = true;
     backgroundMusic.muted = true;
+    backgroundMusic.preload = 'auto';
+    
+    // Add comprehensive event listeners
+    backgroundMusic.addEventListener('loadstart', () => {
+      console.log('Audio: Load started');
+    });
+    
+    backgroundMusic.addEventListener('loadedmetadata', () => {
+      console.log('Audio: Metadata loaded');
+    });
+    
+    backgroundMusic.addEventListener('loadeddata', () => {
+      console.log('Audio: Data loaded');
+      audioReady = true;
+    });
+    
+    backgroundMusic.addEventListener('canplay', () => {
+      console.log('Audio: Can start playing');
+      audioReady = true;
+    });
+    
+    backgroundMusic.addEventListener('canplaythrough', () => {
+      console.log('Audio: Can play through');
+      audioReady = true;
+    });
+    
+    backgroundMusic.addEventListener('play', () => {
+      console.log('Audio: Started playing');
+    });
+    
+    backgroundMusic.addEventListener('pause', () => {
+      console.log('Audio: Paused');
+    });
+    
+    backgroundMusic.addEventListener('error', (e) => {
+      console.error('Audio error:', e);
+      console.error('Audio error details:', backgroundMusic.error);
+      speakerBtn.textContent = '❌';
+      speakerBtn.style.opacity = '0.5';
+    });
+    
+    // Force load the audio
+    try {
+      backgroundMusic.load();
+      console.log('Audio load() called');
+    } catch (error) {
+      console.error('Error calling load():', error);
+    }
+  }
+  
+  // Wait for DOM to be fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAudio);
+  } else {
+    initializeAudio();
+  }
+  
+  // Enhanced speaker button functionality
+  async function toggleAudio() {
+    console.log('Speaker button clicked, current muted state:', isMuted);
+    console.log('Audio ready state:', audioReady);
+    console.log('Audio readyState:', backgroundMusic?.readyState);
+    
+    if (!backgroundMusic) {
+      console.error('No audio element found');
+      return;
+    }
+    
+    // Wait for audio to be ready if it's not already
+    if (!audioReady && backgroundMusic.readyState < 2) {
+      console.log('Audio not ready, waiting...');
+      speakerBtn.textContent = '⏳';
+      
+      // Wait up to 5 seconds for audio to load
+      const maxWaitTime = 5000;
+      const startTime = Date.now();
+      
+      while (!audioReady && backgroundMusic.readyState < 2 && (Date.now() - startTime) < maxWaitTime) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      if (!audioReady && backgroundMusic.readyState < 2) {
+        console.error('Audio failed to load within timeout');
+        speakerBtn.textContent = '❌';
+        return;
+      }
+    }
     backgroundMusic.pause(); // Ensure it starts paused
     speakerIcon.textContent = isMuted ? '🔇' : '🔊';
     if (isMuted) speakerBtn.classList.add('muted');
@@ -1177,87 +1271,9 @@
     backgroundMusic.addEventListener('play', () => {
       console.log('Audio started playing');
     });
-    
-    backgroundMusic.addEventListener('pause', () => {
-      console.log('Audio paused');
-    });
-    
-    backgroundMusic.addEventListener('ended', () => {
-      console.log('Audio ended, should loop');
-    });
-    
-    backgroundMusic.addEventListener('error', (e) => {
-      console.error('Audio error:', e, backgroundMusic.error);
-      // Hide speaker button if audio fails to load
-      speakerIcon.textContent = '❌';
-      setTimeout(() => {
-        speakerBtn.style.display = 'none';
-      }, 3000);
-    });
-  } else {
-    console.error('Audio elements not found');
-  }
-  
-  function updateAuraPosition(x, y) {
-    if (aura) {
-      aura.style.left = x + 'px';
-      aura.style.top = y + 'px';
-    }
-  }
-  
-  function showAura(x, y) {
-    if (aura) {
-      updateAuraPosition(x, y);
-      aura.classList.add('active');
-      isInteracting = true;
-      
-      if (auraTimeout) {
-        clearTimeout(auraTimeout);
-      }
-    }
-  }
-  
-  function hideAura() {
-    if (aura) {
-      aura.classList.remove('active');
-      isInteracting = false;
-    }
-  }
-  
-  // Mouse events for desktop
-  document.addEventListener('mousedown', (e) => {
-    showAura(e.clientX, e.clientY);
-  });
-  
-  document.addEventListener('mousemove', (e) => {
-    if (isInteracting) {
-      updateAuraPosition(e.clientX, e.clientY);
-    }
-  });
-  
-  document.addEventListener('mouseup', () => {
-    auraTimeout = setTimeout(hideAura, 150);
-  });
-  
-  // Touch events for mobile
-  document.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    showAura(touch.clientX, touch.clientY);
-  }, { passive: true });
-  
-  document.addEventListener('touchmove', (e) => {
-    if (isInteracting && e.touches.length > 0) {
-      const touch = e.touches[0];
-      updateAuraPosition(touch.clientX, touch.clientY);
-    }
-  }, { passive: true });
-  
-  document.addEventListener('touchend', () => {
-    auraTimeout = setTimeout(hideAura, 200);
-  }, { passive: true });
-  
-  document.addEventListener('mouseleave', hideAura);
-  
+    try {
+        
+        if (playPromise !== undefined) {
   // Track site visit when page loads
   fetch('/.netlify/functions/track-visit', {
     method: 'POST',
