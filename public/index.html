@@ -92,6 +92,32 @@
       transform: scale(1.05);
     }
     
+    /* Touch aura/ripple effects */
+    .touch-aura {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, rgba(255, 215, 0, 0.2) 50%, transparent 100%);
+      pointer-events: none;
+      transform: scale(0);
+      animation: aura-expand 0.6s ease-out;
+      z-index: 10001;
+    }
+    
+    .touch-aura.purple {
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(139, 92, 246, 0.2) 50%, transparent 100%);
+    }
+    
+    @keyframes aura-expand {
+      0% {
+        transform: scale(0);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
     .orb.active {
       transform: scale(1.1);
       box-shadow: 0 0 30px currentColor;
@@ -592,6 +618,52 @@
   </div>
   
 <script>
+  // Audio setup
+  const backgroundAudio = new Audio('OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3');
+  backgroundAudio.loop = true;
+  backgroundAudio.volume = 0.3;
+  
+  // Auto-play audio (with user interaction fallback)
+  let audioStarted = false;
+  function startAudio() {
+    if (!audioStarted) {
+      backgroundAudio.play().catch(err => {
+        console.log('Audio autoplay blocked, will start on user interaction');
+      });
+      audioStarted = true;
+    }
+  }
+  
+  // Try to start audio immediately
+  startAudio();
+  
+  // Start audio on first user interaction
+  document.addEventListener('click', startAudio, { once: true });
+  document.addEventListener('touchstart', startAudio, { once: true });
+  
+  // Touch aura effect function
+  function createTouchAura(event, isPurple = false) {
+    const aura = document.createElement('div');
+    aura.className = `touch-aura ${isPurple ? 'purple' : ''}`;
+    
+    const rect = event.target.getBoundingClientRect();
+    const size = 100;
+    
+    aura.style.width = size + 'px';
+    aura.style.height = size + 'px';
+    aura.style.left = (event.clientX - size / 2) + 'px';
+    aura.style.top = (event.clientY - size / 2) + 'px';
+    
+    document.body.appendChild(aura);
+    
+    // Remove aura after animation
+    setTimeout(() => {
+      if (aura.parentNode) {
+        aura.parentNode.removeChild(aura);
+      }
+    }, 600);
+  }
+  
   console.log('Single page app loaded');
   
   // Track site visit when page loads
@@ -653,11 +725,21 @@
   // Orb click handlers
   document.querySelectorAll('.orb').forEach(orb => {
     orb.addEventListener('click', (e) => {
+      // Create touch aura effect
+      const isPurple = orb.classList.contains('summarizer-orb');
+      createTouchAura(e, isPurple);
+      
       e.preventDefault();
       const section = orb.getAttribute('data-section');
       if (section !== currentSection) {
         switchToSection(section);
       }
+    });
+    
+    // Add touch aura on touch devices
+    orb.addEventListener('touchstart', (e) => {
+      const isPurple = orb.classList.contains('summarizer-orb');
+      createTouchAura(e.touches[0], isPurple);
     });
   });
 
@@ -790,6 +872,9 @@
   });
   
   explainBtn?.addEventListener('click', async () => {
+    // Create touch aura effect
+    createTouchAura(event);
+    
     if (!explainError || !explainResponse || !explainResponseContainer) return;
     
     explainError.innerHTML = '';
@@ -893,6 +978,9 @@
   const summarizeCopyBtn = document.getElementById('summarizeCopyBtn');
   
   summarizeBtn?.addEventListener('click', async () => {
+    // Create touch aura effect
+    createTouchAura(event, true);
+    
     if (!summarizeError || !summarizeResponse || !summarizeResponseContainer) return;
     
     summarizeError.innerHTML = '';
