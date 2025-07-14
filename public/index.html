@@ -678,7 +678,7 @@
   
 <script>
   // Audio setup - Using the Odumodublvck track
-  const backgroundAudio = new Audio('./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3');
+  const backgroundAudio = new Audio('/OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3');
   backgroundAudio.loop = true;
   backgroundAudio.volume = 0.2; // Lower volume for background music
   backgroundAudio.preload = 'auto';
@@ -686,6 +686,20 @@
   // Audio permission and initialization
   let audioStarted = false;
   let audioPermissionGranted = false;
+  
+  // Test if audio file exists
+  backgroundAudio.addEventListener('loadstart', () => {
+    console.log('Audio loading started');
+  });
+  
+  backgroundAudio.addEventListener('canplay', () => {
+    console.log('Audio can play');
+  });
+  
+  backgroundAudio.addEventListener('error', (e) => {
+    console.error('Audio error:', e);
+    console.error('Audio error details:', backgroundAudio.error);
+  });
   
   // Create audio permission popup
   function createAudioPermissionPopup() {
@@ -783,35 +797,70 @@
     // Handle button clicks
     allowBtn.addEventListener('click', () => {
       audioPermissionGranted = true;
+      console.log('Audio permission granted by user');
       startAudio();
       document.body.removeChild(popup);
     });
     
     skipBtn.addEventListener('click', () => {
       audioPermissionGranted = false;
+      console.log('Audio permission denied by user');
       document.body.removeChild(popup);
     });
   }
   
   function startAudio() {
-    if (!audioStarted) {
+    if (!audioStarted && audioPermissionGranted) {
+      console.log('Attempting to start audio...');
       backgroundAudio.play()
         .then(() => {
           console.log('Odumodublvck track started successfully');
           audioStarted = true;
         })
         .catch(err => {
-          console.log('Audio failed to start:', err);
-          // Try again after a short delay
+          console.error('Audio failed to start:', err);
+          console.log('Trying alternative methods...');
+          
+          // Try to load the audio first
+          backgroundAudio.load();
           setTimeout(() => {
-            backgroundAudio.play().catch(e => console.log('Retry failed:', e));
-          }, 1000);
+            backgroundAudio.play()
+              .then(() => {
+                console.log('Audio started on retry');
+                audioStarted = true;
+              })
+              .catch(e => {
+                console.error('Retry failed:', e);
+                // Try with user interaction
+                document.addEventListener('click', () => {
+                  if (!audioStarted) {
+                    backgroundAudio.play()
+                      .then(() => {
+                        console.log('Audio started after user interaction');
+                        audioStarted = true;
+                      })
+                      .catch(finalErr => console.error('Final attempt failed:', finalErr));
+                  }
+                }, { once: true });
+              });
+          }, 500);
         });
     }
   }
   
   // Show audio permission popup when page loads
   window.addEventListener('load', () => {
+    // Test audio file accessibility
+    fetch('/OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3', { method: 'HEAD' })
+      .then(response => {
+        if (response.ok) {
+          console.log('Audio file is accessible');
+        } else {
+          console.error('Audio file not found:', response.status);
+        }
+      })
+      .catch(err => console.error('Error checking audio file:', err));
+    
     setTimeout(() => {
       createAudioPermissionPopup();
     }, 1000); // Show popup after 1 second
@@ -839,13 +888,17 @@
   muteBtn?.addEventListener('click', (e) => {
     createTouchAura(e);
     
+    console.log('Mute button clicked, current state:', { isMuted, audioStarted, audioPermissionGranted });
+    
     if (isMuted) {
       backgroundAudio.volume = 0.2;
       muteBtn.textContent = '🔊';
       muteBtn.classList.remove('muted');
       muteBtn.title = 'Mute';
       isMuted = false;
+      console.log('Audio unmuted');
       if (audioPermissionGranted && !audioStarted) {
+        console.log('Starting audio after unmute');
         startAudio();
       }
     } else {
@@ -854,6 +907,7 @@
       muteBtn.classList.add('muted');
       muteBtn.title = 'Unmute';
       isMuted = true;
+      console.log('Audio muted');
     }
   });
   
