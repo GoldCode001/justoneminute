@@ -680,12 +680,11 @@
   // Create audio element with multiple source support
   const backgroundAudio = document.createElement('audio');
   backgroundAudio.innerHTML = `
-    <source src="/OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mpeg">
-    <source src="/OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mp3">
+    <source src="./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mpeg">
+    <source src="./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mp3">
   `;
   backgroundAudio.loop = true;
   backgroundAudio.volume = 0.2;
-  backgroundAudio.preload = 'metadata'; // Changed from 'auto' to reduce loading issues
   
   // Audio permission and initialization
   let audioStarted = false;
@@ -896,7 +895,7 @@
     }
     
     // Test audio file accessibility
-    fetch('/OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3', { 
+    fetch('./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3', { 
       method: 'HEAD',
       cache: 'no-cache'
     })
