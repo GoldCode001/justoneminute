@@ -169,25 +169,21 @@
     /* Page sections */
     .page-section {
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      position: absolute;
+      position: fixed;
       width: 100%;
       height: 100%;
+      top: 0;
+      left: 0;
       opacity: 0;
-      transform: translateX(100px);
+      visibility: hidden;
+      z-index: 1;
     }
     
     .page-section.active {
       opacity: 1;
-      transform: translateX(0);
+      visibility: visible;
       position: relative;
-    }
-    
-    .page-section.slide-left {
-      transform: translateX(-100px);
-    }
-    
-    .page-section.slide-right {
-      transform: translateX(100px);
+      z-index: 2;
     }
     
     /* Header */
@@ -682,17 +678,22 @@
   
 <script>
   // Audio setup
-  const backgroundAudio = new Audio('OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3');
+  const backgroundAudio = new Audio('./OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3');
   backgroundAudio.loop = true;
   backgroundAudio.volume = 0.3;
+  backgroundAudio.preload = 'auto';
   
   // Auto-play audio (with user interaction fallback)
   let audioStarted = false;
   function startAudio() {
     if (!audioStarted) {
-      backgroundAudio.play().catch(err => {
-        console.log('Audio autoplay blocked, will start on user interaction');
-      });
+      backgroundAudio.play()
+        .then(() => {
+          console.log('Audio started successfully');
+        })
+        .catch(err => {
+          console.log('Audio autoplay blocked, will start on user interaction:', err);
+        });
       audioStarted = true;
     }
   }
@@ -796,45 +797,71 @@
     const header = document.getElementById('header');
     const footer = document.getElementById('footer');
     
+    // Clear any existing errors and responses when switching
+    const explainError = document.getElementById('explainError');
+    const explainResponseContainer = document.getElementById('explainResponseContainer');
+    const summarizeError = document.getElementById('summarizeError');
+    const summarizeResponseContainer = document.getElementById('summarizeResponseContainer');
+    
     if (sectionName === 'dictionary') {
-      // Slide to dictionary (left)
+      // Hide summarizer completely
       summarizerSection.classList.remove('active');
-      summarizerSection.classList.add('slide-right');
+      summarizerSection.style.visibility = 'hidden';
+      summarizerSection.style.opacity = '0';
       
-      setTimeout(() => {
-        dictionarySection.classList.remove('slide-left');
-        dictionarySection.classList.add('active');
-        
-        // Update orb states
-        dictionaryOrb.classList.add('active');
-        summarizerOrb.classList.remove('active');
-        
-        // Update header theme
-        header.classList.remove('summarizer-mode');
-        footer.classList.remove('summarizer-mode');
-        
-        currentSection = 'dictionary';
-      }, 250);
+      // Show dictionary
+      dictionarySection.classList.add('active');
+      dictionarySection.style.visibility = 'visible';
+      dictionarySection.style.opacity = '1';
+      
+      // Clear summarizer data
+      if (summarizeError) {
+        summarizeError.innerHTML = '';
+        summarizeError.style.display = 'none';
+      }
+      if (summarizeResponseContainer) {
+        summarizeResponseContainer.style.display = 'none';
+      }
+      
+      // Update orb states
+      dictionaryOrb.classList.add('active');
+      summarizerOrb.classList.remove('active');
+      
+      // Update header theme
+      header.classList.remove('summarizer-mode');
+      footer.classList.remove('summarizer-mode');
+      
+      currentSection = 'dictionary';
       
     } else if (sectionName === 'summarizer') {
-      // Slide to summarizer (right)
+      // Hide dictionary completely
       dictionarySection.classList.remove('active');
-      dictionarySection.classList.add('slide-left');
+      dictionarySection.style.visibility = 'hidden';
+      dictionarySection.style.opacity = '0';
       
-      setTimeout(() => {
-        summarizerSection.classList.remove('slide-right');
-        summarizerSection.classList.add('active');
-        
-        // Update orb states
-        summarizerOrb.classList.add('active');
-        dictionaryOrb.classList.remove('active');
-        
-        // Update header theme
-        header.classList.add('summarizer-mode');
-        footer.classList.add('summarizer-mode');
-        
-        currentSection = 'summarizer';
-      }, 250);
+      // Show summarizer
+      summarizerSection.classList.add('active');
+      summarizerSection.style.visibility = 'visible';
+      summarizerSection.style.opacity = '1';
+      
+      // Clear dictionary data
+      if (explainError) {
+        explainError.innerHTML = '';
+        explainError.style.display = 'none';
+      }
+      if (explainResponseContainer) {
+        explainResponseContainer.style.display = 'none';
+      }
+      
+      // Update orb states
+      summarizerOrb.classList.add('active');
+      dictionaryOrb.classList.remove('active');
+      
+      // Update header theme
+      header.classList.add('summarizer-mode');
+      footer.classList.add('summarizer-mode');
+      
+      currentSection = 'summarizer';
     }
   }
   
@@ -973,6 +1000,7 @@
   }
   
   // CRYPTO EXPLANATION FUNCTIONALITY
+  // Only initialize if elements exist (dictionary page)
   const cryptoTermInput = document.getElementById('cryptoTerm');
   const explainBtn = document.getElementById('explainBtn');
   const explainError = document.getElementById('explainError');
@@ -981,13 +1009,19 @@
   const explainCopyBtn = document.getElementById('explainCopyBtn');
   
   // Enter key support for crypto term input
-  cryptoTermInput?.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !explainBtn.disabled) {
-      explainBtn.click();
-    }
-  });
+  if (cryptoTermInput && explainBtn) {
+    cryptoTermInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !explainBtn.disabled && currentSection === 'dictionary') {
+        explainBtn.click();
+      }
+    });
+  }
   
-  explainBtn?.addEventListener('click', async () => {
+  if (explainBtn) {
+    explainBtn.addEventListener('click', async (event) => {
+      // Only work if we're on dictionary section
+      if (currentSection !== 'dictionary') return;
+      
     // Create touch aura effect
     createTouchAura(event, false);
     
@@ -1060,11 +1094,14 @@
       explainBtn.disabled = false;
       explainBtn.textContent = 'Explain This';
     }
-  });
+    });
+  }
   
   // Copy functionality for crypto explanations
-  explainCopyBtn?.addEventListener('click', async () => {
-    if (!explainResponse) return;
+  if (explainCopyBtn && explainResponse) {
+    explainCopyBtn.addEventListener('click', async () => {
+      if (currentSection !== 'dictionary') return;
+      
     try {
       await navigator.clipboard.writeText(explainResponse.textContent || explainResponse.innerText);
       const originalText = explainCopyBtn.textContent;
@@ -1081,9 +1118,11 @@
         explainCopyBtn.textContent = originalText;
       }, 2000);
     }
-  });
+    });
+  }
   
   // LONG-FORM SUMMARIZER FUNCTIONALITY
+  // Only initialize if elements exist (summarizer page)
   const rawTextInput = document.getElementById('rawText');
   const lengthSelect = document.getElementById('length');
   const toneSelect = document.getElementById('tone');
@@ -1093,7 +1132,11 @@
   const summarizeResponse = document.getElementById('summarizeResponse');
   const summarizeCopyBtn = document.getElementById('summarizeCopyBtn');
   
-  summarizeBtn?.addEventListener('click', async () => {
+  if (summarizeBtn) {
+    summarizeBtn.addEventListener('click', async (event) => {
+      // Only work if we're on summarizer section
+      if (currentSection !== 'summarizer') return;
+      
     // Create touch aura effect
     createTouchAura(event, true);
     
@@ -1168,11 +1211,14 @@
       summarizeBtn.disabled = false;
       summarizeBtn.textContent = 'summarize';
     }
-  });
+    });
+  }
   
   // Copy functionality for summarizer
-  summarizeCopyBtn?.addEventListener('click', async () => {
-    if (!summarizeResponse) return;
+  if (summarizeCopyBtn && summarizeResponse) {
+    summarizeCopyBtn.addEventListener('click', async () => {
+      if (currentSection !== 'summarizer') return;
+      
     try {
       await navigator.clipboard.writeText(summarizeResponse.textContent || summarizeResponse.innerText);
       const originalText = summarizeCopyBtn.textContent;
@@ -1189,7 +1235,8 @@
         summarizeCopyBtn.textContent = originalText;
       }, 2000);
     }
-  });
+    });
+  }
 </script>
 </body>
 </html>
