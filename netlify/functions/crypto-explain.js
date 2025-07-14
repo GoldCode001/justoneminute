@@ -85,7 +85,7 @@ Explain: ${cleanTerm}`;
               'X-Title': 'Just One Minute - Crypto Dictionary'
             },
             body: JSON.stringify({
-              model: 'openai/gpt-4.1-mini',
+              model: 'mistralai/mistral-small-3.2-24b-instruct',
               messages: [{ 
                 role: 'user', 
                 content: prompt
