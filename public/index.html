@@ -9,26 +9,12 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='grad' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' style='stop-color:%23ffd700;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ffed4e;stop-opacity:1' /%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)' stroke='%23000' stroke-width='2'/%3E%3Ctext x='50' y='70' font-family='Arial,sans-serif' font-size='50' font-weight='bold' text-anchor='middle' fill='%23000'%3E₿%3C/text%3E%3C/svg%3E">
   
   <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EBSZ1TN6BK"></script>
   <script>
-    // Google Analytics with error handling
-    (function() {
-      try {
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-EBSZ1TN6BK';
-        script.onerror = function() {
-          console.log('Google Analytics failed to load (blocked or network issue)');
-        };
-        document.head.appendChild(script);
-        
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-EBSZ1TN6BK');
-      } catch (error) {
-        console.log('Google Analytics initialization failed:', error);
-      }
-    })();
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EBSZ1TN6BK');
   </script>
   
   <style>
@@ -90,7 +76,6 @@
     
     .orb:hover {
       transform: scale(1.15);
-      filter: drop-shadow(0 0 20px currentColor);
     }
     
     .dictionary-orb:hover {
@@ -107,40 +92,55 @@
       transform: scale(1.05);
     }
     
-    /* Smooth page transitions */
-    .page-transition {
+    .orb.active {
+      transform: scale(1.1);
+      box-shadow: 0 0 30px currentColor;
+    }
+    
+    /* Page sections */
+    .page-section {
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .page-transition.slide-out-left {
-      opacity: 0;
-      transform: translateX(-100px);
-    }
-    
-    .page-transition.slide-out-right {
+      position: absolute;
+      width: 100%;
+      height: 100%;
       opacity: 0;
       transform: translateX(100px);
     }
     
-    .page-transition.slide-in {
+    .page-section.active {
       opacity: 1;
       transform: translateX(0);
+      position: relative;
+    }
+    
+    .page-section.slide-left {
+      transform: translateX(-100px);
+    }
+    
+    .page-section.slide-right {
+      transform: translateX(100px);
     }
     
     /* Header */
     .header {
       height: 60px;
       background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-      border-bottom: 2px solid #ffd700;
+      border-bottom: 2px solid var(--accent-color, #ffd700);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 999;
       box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .header.summarizer-mode {
+      border-bottom-color: #8b5cf6;
+      box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
     }
     
     .header-text {
-      color: #ffd700;
+      color: var(--accent-color, #ffd700);
       font-size: 1.1em;
       font-weight: 600;
       text-decoration: none;
@@ -148,7 +148,7 @@
     }
     
     .header-text:hover {
-      color: #ffed4e;
+      color: var(--accent-hover, #ffed4e);
       text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
       transform: translateY(-1px);
     }
@@ -159,23 +159,9 @@
       display: flex; 
       justify-content: center; 
       align-items: flex-start;
-      overflow-y: auto;
+      overflow: hidden;
       padding: 40px 20px 70px;
-    }
-    
-    .main-content::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    .main-content::-webkit-scrollbar-track {
-      background: #1a1a1a;
-      border-radius: 4px;
-    }
-    
-    .main-content::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%);
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+      position: relative;
     }
     
     .container { 
@@ -189,7 +175,7 @@
       min-height: calc(100vh - 180px);
     }
     
-    /* Main Title */
+    /* Dictionary Section Styles */
     .main-title { 
       font-size: 3.5em;
       font-weight: 700;
@@ -212,6 +198,20 @@
       line-height: 1.5;
     }
     
+    /* Summarizer Section Styles */
+    .summarize-title { 
+      font-size: 2.8em;
+      font-weight: 700;
+      margin-bottom: 32px;
+      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      text-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+      letter-spacing: -0.02em;
+    }
+    
     /* Search Section */
     .search-section {
       width: 100%;
@@ -223,7 +223,7 @@
       width: 100%;
     }
     
-    .search-input { 
+    .search-input, input, select, textarea { 
       width: 100%; 
       padding: 20px 24px; 
       background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
@@ -234,26 +234,42 @@
       font-weight: 500;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      margin: 12px 0;
     }
     
-    .search-input:focus {
+    .search-input:focus, input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: #ffd700;
+      border-color: var(--accent-color, #ffd700);
       box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
       transform: translateY(-2px);
     }
     
-    .search-input::placeholder {
+    .summarizer-section input:focus,
+    .summarizer-section select:focus,
+    .summarizer-section textarea:focus {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    
+    .search-input::placeholder, input::placeholder, textarea::placeholder {
       color: #888;
       font-style: italic;
     }
     
-    .search-btn { 
+    textarea { 
+      resize: vertical;
+      min-height: 120px;
+      font-family: inherit;
+      border-radius: 16px;
+      padding: 16px 20px;
+    }
+    
+    .search-btn, .summarize-btn { 
       width: 100%; 
       padding: 18px 24px; 
       margin-top: 16px; 
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-      color: #0a0a0a; 
+      background: linear-gradient(135deg, var(--accent-color, #ffd700) 0%, var(--accent-hover, #ffed4e) 50%, var(--accent-color, #ffd700) 100%);
+      color: var(--btn-text, #0a0a0a); 
       font-size: 1.2em; 
       font-weight: 700;
       border: none; 
@@ -265,13 +281,22 @@
       letter-spacing: 0.5px;
     }
     
-    .search-btn:hover { 
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(255, 215, 0, 0.6);
-      background: linear-gradient(135deg, #ffed4e 0%, #ffd700 50%, #ffed4e 100%);
+    .summarize-btn {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #8b5cf6 100%);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
     }
     
-    .search-btn:disabled {
+    .search-btn:hover, .summarize-btn:hover { 
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(255, 215, 0, 0.6);
+    }
+    
+    .summarize-btn:hover {
+      box-shadow: 0 12px 32px rgba(139, 92, 246, 0.6);
+    }
+    
+    .search-btn:disabled, .summarize-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
@@ -304,22 +329,36 @@
     }
     
     .response-display strong { 
-      color: #ffd700; 
+      color: var(--accent-color, #ffd700); 
       font-weight: 700;
       text-shadow: 0 1px 2px rgba(255, 215, 0, 0.3);
     }
     
+    .summarizer-section .response-display strong {
+      color: #8b5cf6;
+      text-shadow: 0 1px 2px rgba(139, 92, 246, 0.3);
+    }
+    
     .response-display em { 
-      color: #ffed4e; 
+      color: var(--accent-hover, #ffed4e); 
       font-style: italic; 
+    }
+    
+    .summarizer-section .response-display em {
+      color: #a78bfa;
     }
     
     .response-display code {
       background: rgba(255, 215, 0, 0.1);
-      color: #ffd700;
+      color: var(--accent-color, #ffd700);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: 'Courier New', monospace;
+    }
+    
+    .summarizer-section .response-display code {
+      background: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
     }
     
     .response-display ul, .response-display ol { 
@@ -337,21 +376,33 @@
       padding: 12px 24px; 
       margin-top: 16px; 
       background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
-      color: #ffd700;
+      color: var(--accent-color, #ffd700);
       font-size: 1em; 
       font-weight: 600;
       border-radius: 12px;
-      border: 2px solid #ffd700;
+      border: 2px solid var(--accent-color, #ffd700);
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
       cursor: pointer;
       transition: all 0.3s ease;
     }
     
+    .summarizer-section .copy-btn {
+      color: #8b5cf6;
+      border-color: #8b5cf6;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    }
+    
     .copy-btn:hover {
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      background: linear-gradient(135deg, var(--accent-color, #ffd700) 0%, var(--accent-hover, #ffed4e) 100%);
       color: #0a0a0a;
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+    }
+    
+    .summarizer-section .copy-btn:hover {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
     }
     
     /* Error Styles */
@@ -424,7 +475,7 @@
     }
     
     .footer-text:hover {
-      color: #ffd700;
+      color: var(--accent-color, #ffd700);
       text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
       transform: translateY(-1px);
     }
@@ -437,52 +488,6 @@
     
     .loading {
       animation: pulse 1.5s ease-in-out infinite;
-    }
-    
-    /* Audio Controls */
-    .audio-controls {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .speaker-btn {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 2px solid #ffd700;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-      color: #ffd700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2em;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
-    }
-    
-    .speaker-btn:hover {
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-      color: #0a0a0a;
-      transform: scale(1.1);
-      box-shadow: 0 6px 16px rgba(255, 215, 0, 0.4);
-    }
-    
-    .speaker-btn.muted {
-      opacity: 0.5;
-      background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
-    }
-    
-    .audio-status {
-      color: #ffd700;
-      font-size: 0.9em;
-      font-weight: 500;
-      opacity: 0.8;
     }
     
     /* Mobile Responsive */
@@ -501,6 +506,10 @@
         font-size: 2.5em;
       }
       
+      .summarize-title {
+        font-size: 2.2em;
+      }
+      
       .subtitle {
         font-size: 1.1em;
       }
@@ -508,67 +517,72 @@
       .container {
         padding: 0 15px;
       }
-      
-      .audio-controls {
-        bottom: 15px;
-        left: 15px;
-      }
-      
-      .speaker-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1.1em;
-      }
     }
   </style>
 </head>
 <body>
   <!-- Floating Orbs - Two vertically aligned -->
   <div class="floating-orbs">
-    <a href="/" class="orb dictionary-orb" title="Crypto Dictionary">
+    <button class="orb dictionary-orb active" data-section="dictionary" title="Crypto Dictionary">
       ₿
-    </a>
-    <a href="/summarizer" class="orb summarizer-orb" title="Summarizer">
-      ∑
-    </a>
-  </div>
-  
-  <!-- Audio element -->
-  <audio id="backgroundAudio" loop preload="auto">
-    <source src="OdumoduBlvck-Ft-Victony-Pity-This-Boy-(TrendyBeatz.com) (2) (1).mp3" type="audio/mpeg">
-  </audio>
-  
-  <!-- Audio Controls -->
-  <div class="audio-controls">
-    <button id="speakerBtn" class="speaker-btn muted" title="Toggle Audio">
-      🔇
     </button>
-    <div id="audioStatus" class="audio-status">⏳</div>
+    <button class="orb summarizer-orb" data-section="summarizer" title="Summarizer">
+      ∑
+    </button>
   </div>
   
-  <div class="header">
+  <div class="header" id="header">
     <a href="https://goldmancreates.substack.com" target="_blank" class="header-text">
       join my newsletter -- goldmancreates.substack.com
     </a>
   </div>
   
   <div class="main-content">
-    <div class="container page-transition">
-      <h1 class="main-title">goldman</h1>
-      <p class="subtitle">ask me anything about crypto, defi, web3, or blockchain</p>
-      <p class="subtitle" style="font-size: 0.9em; margin-top: -20px; margin-bottom: 40px; opacity: 0.8;">...all you need is one minute.</p>
-      
-      <div class="search-section">
-        <div class="search-container">
-          <input type="text" id="cryptoTerm" class="search-input" placeholder="Enter any crypto term (e.g., DeFi, NFT, staking...)" maxlength="100">
-          <button type="button" id="explainBtn" class="search-btn">Explain This</button>
+    <!-- Dictionary Section -->
+    <div class="page-section dictionary-section active" id="dictionarySection">
+      <div class="container">
+        <h1 class="main-title">goldman</h1>
+        <p class="subtitle">ask me anything about crypto, defi, web3, or blockchain</p>
+        <p class="subtitle" style="font-size: 0.9em; margin-top: -20px; margin-bottom: 40px; opacity: 0.8;">...all you need is one minute.</p>
+        
+        <div class="search-section">
+          <div class="search-container">
+            <input type="text" id="cryptoTerm" class="search-input" placeholder="Enter any crypto term (e.g., DeFi, NFT, staking...)" maxlength="100">
+            <button type="button" id="explainBtn" class="search-btn">Explain This</button>
+          </div>
+        </div>
+        
+        <div id="explainError"></div>
+        <div class="response-container" id="explainResponseContainer" style="display: none;">
+          <div id="explainResponse" class="response-display"></div>
+          <button type="button" id="explainCopyBtn" class="copy-btn">Copy to Clipboard</button>
         </div>
       </div>
-      
-      <div id="explainError"></div>
-      <div class="response-container" id="explainResponseContainer" style="display: none;">
-        <div id="explainResponse" class="response-display"></div>
-        <button type="button" id="explainCopyBtn" class="copy-btn">Copy to Clipboard</button>
+    </div>
+    
+    <!-- Summarizer Section -->
+    <div class="page-section summarizer-section" id="summarizerSection">
+      <div class="container">
+        <h1 class="summarize-title">...just one minute</h1>
+        <textarea id="rawText" placeholder="paste any long form text here" rows="4"></textarea>
+        <select id="length">
+          <option value="1 line">1 line</option>
+          <option value="3 sentences" selected>3 sentences</option>
+          <option value="bullet list">bullet list</option>
+        </select>
+        <select id="tone">
+          <option value="simple">simple</option>
+          <option value="professional">professional</option>
+          <option value="conversational">conversational</option>
+          <option value="shitpost">shitpost</option>
+          <option value="infographics">infographics</option>
+        </select>
+        <button type="button" id="summarizeBtn" class="summarize-btn">summarize</button>
+        <div id="summarizeError"></div>
+        <div class="response-container" id="summarizeResponseContainer" style="display: none;">
+          <div id="summarizeResponse" class="response-display"></div>
+          <button type="button" id="summarizeCopyBtn" class="copy-btn">Copy to Clipboard</button>
+        </div>
       </div>
     </div>
   </div>
@@ -578,7 +592,7 @@
   </div>
   
 <script>
-  console.log('Crypto Dictionary loaded');
+  console.log('Single page app loaded');
   
   // Track site visit when page loads
   fetch('/.netlify/functions/track-visit', {
@@ -586,124 +600,66 @@
     headers: { 'Content-Type': 'application/json' }
   }).catch(err => console.log('Visit tracking failed:', err));
 
-  // Audio Management System
-  let audioInitialized = false;
-  let audioElement = null;
-  let speakerBtn = null;
-  let audioStatus = null;
-  let isMuted = true;
-
-  // Initialize audio system
-  async function initializeAudio() {
-    console.log('Initializing audio system...');
+  // Page switching functionality
+  let currentSection = 'dictionary';
+  
+  function switchToSection(sectionName) {
+    const dictionarySection = document.getElementById('dictionarySection');
+    const summarizerSection = document.getElementById('summarizerSection');
+    const dictionaryOrb = document.querySelector('.dictionary-orb');
+    const summarizerOrb = document.querySelector('.summarizer-orb');
+    const header = document.getElementById('header');
     
-    audioElement = document.getElementById('backgroundAudio');
-    speakerBtn = document.getElementById('speakerBtn');
-    audioStatus = document.getElementById('audioStatus');
-    
-    if (!audioElement || !speakerBtn || !audioStatus) {
-      console.error('Audio elements not found');
-      return;
-    }
-    
-    // Set initial state
-    audioElement.muted = true;
-    audioElement.volume = 0.3;
-    audioStatus.textContent = '⏳';
-    
-    // Add event listeners
-    audioElement.addEventListener('loadstart', () => {
-      console.log('Audio loading started');
-      audioStatus.textContent = '⏳';
-    });
-    
-    audioElement.addEventListener('loadeddata', () => {
-      console.log('Audio data loaded');
-      audioStatus.textContent = '✓';
-    });
-    
-    audioElement.addEventListener('canplaythrough', () => {
-      console.log('Audio can play through');
-      audioInitialized = true;
-      audioStatus.textContent = '🔇';
-    });
-    
-    audioElement.addEventListener('playing', () => {
-      console.log('Audio started playing');
-      audioStatus.textContent = '🎵';
-    });
-    
-    audioElement.addEventListener('pause', () => {
-      console.log('Audio paused');
-      audioStatus.textContent = '⏸️';
-    });
-    
-    audioElement.addEventListener('error', (e) => {
-      console.error('Audio error:', e);
-      audioStatus.textContent = '⚠️';
-      speakerBtn.style.opacity = '0.3';
-    });
-    
-    // Speaker button click handler
-    speakerBtn.addEventListener('click', async () => {
-      console.log('Speaker button clicked, current muted state:', isMuted);
+    if (sectionName === 'dictionary') {
+      // Slide to dictionary (left)
+      summarizerSection.classList.remove('active');
+      summarizerSection.classList.add('slide-right');
       
-      if (!audioInitialized) {
-        console.log('Audio not initialized yet');
-        return;
-      }
+      setTimeout(() => {
+        dictionarySection.classList.remove('slide-left');
+        dictionarySection.classList.add('active');
+        
+        // Update orb states
+        dictionaryOrb.classList.add('active');
+        summarizerOrb.classList.remove('active');
+        
+        // Update header theme
+        header.classList.remove('summarizer-mode');
+        
+        currentSection = 'dictionary';
+      }, 250);
       
-      try {
-        if (isMuted) {
-          console.log('Attempting to unmute and play...');
-          audioElement.muted = false;
-          
-          // Wait for audio to be ready
-          if (audioElement.readyState < 3) {
-            console.log('Waiting for audio to be ready...');
-            await new Promise((resolve, reject) => {
-              const timeout = setTimeout(() => reject(new Error('Audio load timeout')), 5000);
-              audioElement.addEventListener('canplaythrough', () => {
-                clearTimeout(timeout);
-                resolve();
-              }, { once: true });
-            });
-          }
-          
-          await audioElement.play();
-          isMuted = false;
-          speakerBtn.textContent = '🔊';
-          speakerBtn.classList.remove('muted');
-          console.log('Audio unmuted and playing');
-        } else {
-          console.log('Muting audio...');
-          audioElement.pause();
-          audioElement.muted = true;
-          isMuted = true;
-          speakerBtn.textContent = '🔇';
-          speakerBtn.classList.add('muted');
-          audioStatus.textContent = '🔇';
-          console.log('Audio muted');
-        }
-      } catch (error) {
-        console.error('Error toggling audio:', error);
-        audioStatus.textContent = '⚠️';
-        speakerBtn.style.opacity = '0.3';
-      }
-    });
-    
-    // Try to load the audio
-    try {
-      console.log('Loading audio...');
-      audioElement.load();
-    } catch (error) {
-      console.error('Error loading audio:', error);
-      audioStatus.textContent = '⚠️';
+    } else if (sectionName === 'summarizer') {
+      // Slide to summarizer (right)
+      dictionarySection.classList.remove('active');
+      dictionarySection.classList.add('slide-left');
+      
+      setTimeout(() => {
+        summarizerSection.classList.remove('slide-right');
+        summarizerSection.classList.add('active');
+        
+        // Update orb states
+        summarizerOrb.classList.add('active');
+        dictionaryOrb.classList.remove('active');
+        
+        // Update header theme
+        header.classList.add('summarizer-mode');
+        
+        currentSection = 'summarizer';
+      }, 250);
     }
   }
-
-  // Initialize audio when page loads
-  document.addEventListener('DOMContentLoaded', initializeAudio);
+  
+  // Orb click handlers
+  document.querySelectorAll('.orb').forEach(orb => {
+    orb.addEventListener('click', (e) => {
+      e.preventDefault();
+      const section = orb.getAttribute('data-section');
+      if (section !== currentSection) {
+        switchToSection(section);
+      }
+    });
+  });
 
   // Helper function to escape HTML characters
   function escapeHtml(text) {
@@ -926,27 +882,109 @@
     }
   });
   
-  // Smooth page transitions for orbs
-  document.querySelectorAll('.orb').forEach(orb => {
-    orb.addEventListener('click', (e) => {
-      e.preventDefault();
-      const href = orb.getAttribute('href');
-      const container = document.querySelector('.container');
+  // LONG-FORM SUMMARIZER FUNCTIONALITY
+  const rawTextInput = document.getElementById('rawText');
+  const lengthSelect = document.getElementById('length');
+  const toneSelect = document.getElementById('tone');
+  const summarizeBtn = document.getElementById('summarizeBtn');
+  const summarizeError = document.getElementById('summarizeError');
+  const summarizeResponseContainer = document.getElementById('summarizeResponseContainer');
+  const summarizeResponse = document.getElementById('summarizeResponse');
+  const summarizeCopyBtn = document.getElementById('summarizeCopyBtn');
+  
+  summarizeBtn?.addEventListener('click', async () => {
+    if (!summarizeError || !summarizeResponse || !summarizeResponseContainer) return;
+    
+    summarizeError.innerHTML = '';
+    summarizeError.style.display = 'none';
+    
+    summarizeResponse.innerHTML = 'Loading...';
+    summarizeResponse.classList.add('loading');
+    summarizeResponseContainer.style.display = 'block';
+    summarizeBtn.disabled = true;
+    summarizeBtn.textContent = 'Summarizing...';
+
+    const rawText = rawTextInput instanceof HTMLTextAreaElement ? rawTextInput.value.trim() : '';
+    const length = lengthSelect instanceof HTMLSelectElement ? lengthSelect.value : '';
+    const tone = toneSelect instanceof HTMLSelectElement ? toneSelect.value : '';
+
+    if (!rawText) {
+      showError(summarizeError, 'No Content Provided', 'Please paste some text to summarize.', 'Try copying and pasting an article, blog post, Twitter thread, or any long-form content you\'d like summarized.');
+      summarizeResponse.innerHTML = '';
+      summarizeResponse.classList.remove('loading');
+      summarizeResponseContainer.style.display = 'none';
+      summarizeBtn.disabled = false;
+      summarizeBtn.textContent = 'summarize';
+      return;
+    }
+
+    try {
+      const res = await fetch('/.netlify/functions/summarize', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadUrl: '', rawText, length, tone })
+      });
       
-      // Determine slide direction based on destination
-      if (href === '/summarizer') {
-        // Slide right when going to summarizer
-        container.classList.add('slide-out-right');
-      } else {
-        // Slide left when going to dictionary
-        container.classList.add('slide-out-left');
+      const responseText = await res.text();
+      
+      if (!responseText) {
+        throw new Error('Empty response from server');
       }
       
-      // Navigate after animation
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', responseText);
+        throw new Error('The server returned an invalid response. Please try again.');
+      }
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      if (!res.ok) {
+        throw new Error(data.error || `Server error (${res.status})`);
+      }
+      
+      if (!data.summary) {
+        throw new Error('No summary was generated. Please try again with different content.');
+      }
+      
+      summarizeResponse.innerHTML = formatResponse(data.summary);
+      summarizeResponse.classList.remove('loading');
+      
+      console.log(`Successfully used tone: ${tone} with length: ${length}`);
+    } catch (err) {
+      handleError(err, summarizeError);
+      summarizeResponse.innerHTML = '';
+      summarizeResponse.classList.remove('loading');
+      summarizeResponseContainer.style.display = 'none';
+    } finally {
+      summarizeBtn.disabled = false;
+      summarizeBtn.textContent = 'summarize';
+    }
+  });
+  
+  // Copy functionality for summarizer
+  summarizeCopyBtn?.addEventListener('click', async () => {
+    if (!summarizeResponse) return;
+    try {
+      await navigator.clipboard.writeText(summarizeResponse.textContent || summarizeResponse.innerText);
+      const originalText = summarizeCopyBtn.textContent;
+      summarizeCopyBtn.textContent = 'Copied!';
       setTimeout(() => {
-        window.location.href = href;
-      }, 500);
-    });
+        summarizeCopyBtn.textContent = originalText;
+      }, 2000);
+    } catch (err) {
+      const range = document.createRange();
+      range.selectNode(summarizeResponse);
+      const originalText = summarizeCopyBtn.textContent;
+      summarizeCopyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        summarizeCopyBtn.textContent = originalText;
+      }, 2000);
+    }
   });
 </script>
 </body>
