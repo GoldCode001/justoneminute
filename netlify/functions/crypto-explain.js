@@ -110,7 +110,7 @@ Explain: ${cleanTerm}`;
             // Handle specific error cases with friendly messages
             if (llmRes.status === 429 || errText.includes('rate limit') || errText.includes('quota') || errText.includes('usage')) {
               throw new Error('Site under maintenance, bear with us and try again later');
-            } else if (llmRes.status === 402 || errText.includes('insufficient') || errText.includes('credits')) {
+            } else if (llmRes.status === 402 || errText.includes('insufficient') || errText.includes('credits') || errText.includes('requires more credits') || errText.includes('can only afford')) {
               throw new Error('Site under maintenance, bear with us and try again later');
             } else {
               throw new Error(`AI service error: ${errText}`);
@@ -199,7 +199,7 @@ Explain: ${cleanTerm}`;
     if (err.message && (err.message.includes('rate limit') || err.message.includes('Site under maintenance'))) {
       statusCode = 503;
       errorMessage = 'Site under maintenance, bear with us and try again later';
-    } else if (err.message && (err.message.includes('quota') || err.message.includes('usage') || err.message.includes('credits'))) {
+    } else if (err.message && (err.message.includes('quota') || err.message.includes('usage') || err.message.includes('credits') || err.message.includes('requires more credits') || err.message.includes('can only afford'))) {
       statusCode = 503;
       errorMessage = 'Site under maintenance, bear with us and try again later';
     } else if (err.message && err.message.includes('network')) {
