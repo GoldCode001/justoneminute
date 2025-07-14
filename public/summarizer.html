@@ -86,18 +86,36 @@
     
     .orb:hover {
       transform: scale(1.15);
+      filter: drop-shadow(0 0 20px currentColor);
     }
     
     .dictionary-orb:hover {
       box-shadow: 0 12px 48px rgba(255, 215, 0, 0.5);
+      filter: drop-shadow(0 0 25px #ffd700);
     }
     
     .summarizer-orb:hover {
       box-shadow: 0 12px 48px rgba(139, 92, 246, 0.5);
+      filter: drop-shadow(0 0 25px #8b5cf6);
     }
     
     .orb:active {
       transform: scale(1.05);
+    }
+    
+    /* Smooth page transitions */
+    .page-transition {
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .page-transition.fade-out {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    
+    .page-transition.fade-in {
+      opacity: 1;
+      transform: translateX(0);
     }
     
     /* Header */
@@ -419,7 +437,7 @@
   </div>
   
   <div class="main-content">
-    <div class="container">
+    <div class="container page-transition">
       <h1 class="summarize-title">...just one minute</h1>
       <textarea id="rawText" placeholder="paste any long form text here" rows="4"></textarea>
       <select id="length">
@@ -671,6 +689,23 @@
         summarizeCopyBtn.textContent = originalText;
       }, 2000);
     }
+  });
+  
+  // Smooth page transitions for orbs
+  document.querySelectorAll('.orb').forEach(orb => {
+    orb.addEventListener('click', (e) => {
+      e.preventDefault();
+      const href = orb.getAttribute('href');
+      
+      // Add fade out effect
+      const container = document.querySelector('.container');
+      container.classList.add('fade-out');
+      
+      // Navigate after animation
+      setTimeout(() => {
+        window.location.href = href;
+      }, 300);
+    });
   });
 </script>
 </body>
