@@ -110,43 +110,44 @@
     /* Speaker Button */
     .speaker-btn {
       position: fixed;
-      top: 20px;
-      left: 20px;
+      top: 50%;
+      left: 30px;
+      transform: translateY(-50%);
       z-index: 10001;
-      width: 50px;
-      height: 50px;
+      width: 70px;
+      height: 70px;
       border-radius: 50%;
       border: none;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2em;
+      font-size: 1.8em;
       backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 215, 0, 0.3);
+      border: 2px solid #ffd700;
     }
     
     .speaker-btn:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 24px rgba(255, 215, 0, 0.3);
-      border-color: rgba(255, 215, 0, 0.6);
+      transform: translateY(-50%) scale(1.15);
+      box-shadow: 0 12px 48px rgba(255, 215, 0, 0.5);
     }
     
     .speaker-btn:active {
-      transform: scale(1.05);
+      transform: translateY(-50%) scale(1.05);
     }
     
     .speaker-btn.muted {
       background: linear-gradient(135deg, #4a1a1a 0%, #5a2a2a 100%);
-      border-color: rgba(255, 107, 107, 0.3);
+      border-color: #ff6b6b;
+      box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
     }
     
     .speaker-btn.muted:hover {
-      border-color: rgba(255, 107, 107, 0.6);
-      box-shadow: 0 6px 24px rgba(255, 107, 107, 0.3);
+      transform: translateY(-50%) scale(1.15);
+      box-shadow: 0 12px 48px rgba(255, 107, 107, 0.5);
     }
     
     .page {
@@ -812,10 +813,9 @@
       }
       
       .speaker-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1.1em;
-        top: 15px;
+        width: 60px;
+        height: 60px;
+        font-size: 1.5em;
         left: 15px;
       }
       
