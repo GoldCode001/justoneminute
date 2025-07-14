@@ -101,8 +101,8 @@
       transform: scale(0);
       animation: aura-expand 0.8s ease-out;
       z-index: 10001;
-      width: 120px;
-      height: 120px;
+      width: 60px;
+      height: 60px;
     }
     
     .touch-aura.purple {
@@ -118,7 +118,7 @@
         opacity: 0.8;
       }
       100% {
-        transform: scale(3);
+        transform: scale(2.5);
         opacity: 0;
       }
     }
@@ -682,6 +682,21 @@
   document.addEventListener('click', startAudio, { once: true });
   document.addEventListener('touchstart', startAudio, { once: true });
   
+  // Global click/touch aura effect - appears anywhere user clicks
+  document.addEventListener('click', (e) => {
+    // Don't create aura for specific interactive elements (they have their own)
+    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mute-button')) {
+      createTouchAura(e);
+    }
+  });
+  
+  document.addEventListener('touchstart', (e) => {
+    // Don't create aura for specific interactive elements (they have their own)
+    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mute-button')) {
+      createTouchAura(e);
+    }
+  });
+  
   // Mute/Unmute functionality
   const muteBtn = document.getElementById('muteBtn');
   let isMuted = false;
@@ -706,7 +721,7 @@
   
   // Touch aura effect function
   function createTouchAura(event, isPurple = false) {
-    if (!event || !event.target) return;
+    if (!event) return;
     
     const aura = document.createElement('div');
     aura.className = `touch-aura ${isPurple ? 'purple' : ''}`;
@@ -722,8 +737,8 @@
     }
     
     // Position the aura at the click/touch point
-    aura.style.left = (clientX - 60) + 'px'; // 60 = half of 120px width
-    aura.style.top = (clientY - 60) + 'px';  // 60 = half of 120px height
+    aura.style.left = (clientX - 30) + 'px'; // 30 = half of 60px width
+    aura.style.top = (clientY - 30) + 'px';  // 30 = half of 60px height
     
     document.body.appendChild(aura);
     
