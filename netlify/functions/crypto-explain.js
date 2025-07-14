@@ -91,7 +91,7 @@ Explain: ${cleanTerm}`;
                 content: prompt
               }],
               max_tokens: 24, // Reduced to match available credits
-              max_tokens: 150, // Reasonable length for explanations
+              max_tokens: 200, // Increased for more complete explanations
               temperature: 0.8 // Higher temperature for more natural, conversational responses
             })
           });
@@ -277,37 +277,36 @@ function ensureCompleteSentence(text) {
     return cleanText; // Already complete
   }
   
-  // Find the last complete sentence
-  const sentences = cleanText.split(/([.!?]+)/);
-  let completeText = '';
+  // More aggressive approach to ensure meaningful completion
+  // First, try to find the last complete sentence
+  const sentenceMatch = cleanText.match(/(.*[.!?])/);
+  if (sentenceMatch) {
+    return sentenceMatch[1];
+  }
   
-  // Work backwards to find the last complete sentence
-  for (let i = 0; i < sentences.length - 1; i += 2) {
-    const sentence = sentences[i];
-    const punctuation = sentences[i + 1];
-    
-    if (sentence && sentence.trim().length > 0 && punctuation && /[.!?]/.test(punctuation)) {
-      completeText += sentence + punctuation;
+  // If no complete sentences, look for natural breaking points
+  const words = cleanText.split(/\s+/);
+  
+  // If it's very short, just add a period
+  if (words.length <= 5) {
+    return cleanText + '.';
+  }
+  
+  // Look for natural stopping points (conjunctions, prepositions, etc.)
+  const stopWords = ['and', 'but', 'or', 'so', 'because', 'since', 'while', 'when', 'where', 'which', 'that', 'with', 'for', 'in', 'on', 'at', 'by', 'from', 'to'];
+  
+  // Work backwards to find a good stopping point
+  for (let i = Math.max(0, words.length - 5); i < words.length; i++) {
+    if (stopWords.includes(words[i].toLowerCase())) {
+      // Stop before the conjunction/preposition for a more natural ending
+      const truncated = words.slice(0, i).join(' ');
+      if (truncated.length > 20) { // Make sure we have enough content
+        return truncated + '.';
+      }
     }
   }
   
-  if (completeText.trim().length === 0) {
-    // If no complete sentences found, add a period to the original text
-    // but remove any trailing incomplete words first
-    const words = cleanText.trim().split(/\s+/);
-    if (words.length > 3) {
-      // Remove the last word if it might be incomplete
-      const truncatedText = words.slice(0, -1).join(' ');
-      return truncatedText + '.';
-    }
-    
-    // Add period if it doesn't end with punctuation
-    if (!/[.!?]$/.test(cleanText)) {
-      cleanText += '.';
-    }
-    
-    return cleanText;
-  }
-  
-  return completeText;
+  // If no good stopping point found, remove the last few words and add period
+  const truncated = words.slice(0, -2).join(' ');
+  return truncated.length > 20 ? truncated + '.' : cleanText + '.';
 }
