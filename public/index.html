@@ -136,7 +136,7 @@
     }
     
     /* Mute Button */
-    .mute-button {
+    .old-mute-button {
       position: fixed;
       bottom: 20px;
       right: 20px;
@@ -164,6 +164,213 @@
     
     .mute-button.muted {
       color: #ff6b6b;
+    }
+    
+    /* Mini MP3 Player */
+    .mini-player {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 280px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      border: 2px solid #ffd700;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+      z-index: 10000;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .mini-player:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(255, 215, 0, 0.4);
+    }
+    
+    .player-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .song-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .song-title {
+      color: #ffd700;
+      font-size: 0.9em;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    
+    .song-artist {
+      color: #ccc;
+      font-size: 0.8em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .play-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 12px;
+    }
+    
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff6b6b;
+      transition: all 0.3s ease;
+    }
+    
+    .status-indicator.playing {
+      background: #4ade80;
+      animation: pulse-green 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.2); }
+    }
+    
+    .status-text {
+      color: #888;
+      font-size: 0.75em;
+      font-weight: 500;
+    }
+    
+    .status-text.playing {
+      color: #4ade80;
+    }
+    
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .control-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+      color: #ffd700;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .control-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+      background: linear-gradient(135deg, #3a3a3a 0%, #4a4a4a 100%);
+    }
+    
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .control-btn.muted {
+      color: #ff6b6b;
+    }
+    
+    .play-btn {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      color: #0a0a0a;
+      font-size: 1.3em;
+    }
+    
+    .play-btn:hover {
+      background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.5);
+    }
+    
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    
+    .volume-slider {
+      flex: 1;
+      height: 4px;
+      background: #3a3a3a;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .volume-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+    }
+    
+    .volume-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    }
+    
+    .volume-slider::-webkit-slider-track {
+      background: linear-gradient(to right, #ffd700 0%, #ffd700 var(--volume-percent, 20%), #3a3a3a var(--volume-percent, 20%), #3a3a3a 100%);
+      height: 4px;
+      border-radius: 2px;
+    }
+    
+    .volume-slider::-moz-range-track {
+      background: #3a3a3a;
+      height: 4px;
+      border-radius: 2px;
+      border: none;
+    }
+    
+    .volume-slider::-moz-range-progress {
+      background: #ffd700;
+      height: 4px;
+      border-radius: 2px;
+    }
+    
+    .volume-text {
+      color: #888;
+      font-size: 0.75em;
+      font-weight: 500;
+      min-width: 30px;
+      text-align: center;
     }
     
     /* Page sections */
@@ -610,10 +817,34 @@
     </button>
   </div>
   
-  <!-- Mute Button -->
-  <button class="mute-button" id="muteBtn" title="Mute/Unmute">
-    🔊
-  </button>
+  <!-- Mini MP3 Player -->
+  <div class="mini-player" id="miniPlayer">
+    <div class="player-header">
+      <div class="song-info">
+        <div class="song-title" id="songTitle">Pity This Boy</div>
+        <div class="song-artist" id="songArtist">Odumodublvck ft. Victony</div>
+      </div>
+      <div class="play-status">
+        <div class="status-indicator" id="statusIndicator"></div>
+        <div class="status-text" id="statusText">Stopped</div>
+      </div>
+    </div>
+    
+    <div class="player-controls">
+      <button class="control-btn play-btn" id="playPauseBtn" title="Play/Pause">
+        ▶️
+      </button>
+      
+      <button class="control-btn" id="muteBtn" title="Mute/Unmute">
+        🔊
+      </button>
+      
+      <div class="volume-container">
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="20" title="Volume">
+        <div class="volume-text" id="volumeText">20%</div>
+      </div>
+    </div>
+  </div>
   
   <div class="header" id="header">
     <a href="https://goldmancreates.substack.com" target="_blank" class="header-text">
@@ -850,11 +1081,13 @@
           .then(() => {
             console.log('Odumodublvck track started successfully');
             audioStarted = true;
+            updatePlayerStatus(true);
           })
           .catch(err => {
             console.error('Audio failed to start:', err);
             console.error('Error name:', err.name);
             console.error('Error message:', err.message);
+            updatePlayerStatus(false);
             
             // If it's a format error, don't retry
             if (err.name === 'NotSupportedError') {
@@ -870,10 +1103,12 @@
                   .then(() => {
                     console.log('Audio started after user interaction');
                     audioStarted = true;
+                    updatePlayerStatus(true);
                   })
                   .catch(finalErr => {
                     console.error('Final attempt failed:', finalErr);
                     console.error('Audio will not play in this browser/device');
+                    updatePlayerStatus(false);
                   });
               }
             }, { once: true });
@@ -930,47 +1165,157 @@
   // Global click/touch aura effect - appears anywhere user clicks
   document.addEventListener('click', (e) => {
     // Don't create aura for specific interactive elements (they have their own)
-    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mute-button')) {
+    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mini-player')) {
       createTouchAura(e);
     }
   });
   
   document.addEventListener('touchstart', (e) => {
     // Don't create aura for specific interactive elements (they have their own)
-    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mute-button')) {
+    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mini-player')) {
       createTouchAura(e);
     }
   });
   
-  // Mute/Unmute functionality
+  // Mini Player functionality
+  const miniPlayer = document.getElementById('miniPlayer');
+  const playPauseBtn = document.getElementById('playPauseBtn');
   const muteBtn = document.getElementById('muteBtn');
-  let isMuted = false;
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumeText = document.getElementById('volumeText');
+  const statusIndicator = document.getElementById('statusIndicator');
+  const statusText = document.getElementById('statusText');
+  const songTitle = document.getElementById('songTitle');
+  const songArtist = document.getElementById('songArtist');
   
+  let isMuted = false;
+  let isPlaying = false;
+  
+  // Update player status
+  function updatePlayerStatus(playing) {
+    isPlaying = playing;
+    
+    if (playing) {
+      playPauseBtn.innerHTML = '⏸️';
+      playPauseBtn.title = 'Pause';
+      statusIndicator.classList.add('playing');
+      statusText.textContent = 'Playing';
+      statusText.classList.add('playing');
+    } else {
+      playPauseBtn.innerHTML = '▶️';
+      playPauseBtn.title = 'Play';
+      statusIndicator.classList.remove('playing');
+      statusText.textContent = 'Paused';
+      statusText.classList.remove('playing');
+    }
+  }
+  
+  // Update volume display
+  function updateVolumeDisplay(volume) {
+    const percentage = Math.round(volume * 100);
+    volumeText.textContent = `${percentage}%`;
+    volumeSlider.value = percentage;
+    volumeSlider.style.setProperty('--volume-percent', `${percentage}%`);
+  }
+  
+  // Play/Pause button
+  playPauseBtn?.addEventListener('click', (e) => {
+    createTouchAura(e);
+    
+    if (!audioPermissionGranted) {
+      // Show audio permission popup if not granted
+      createAudioPermissionPopup();
+      return;
+    }
+    
+    if (backgroundAudio.paused) {
+      backgroundAudio.play()
+        .then(() => {
+          console.log('Audio started from player');
+          audioStarted = true;
+          updatePlayerStatus(true);
+        })
+        .catch(err => {
+          console.error('Failed to play audio:', err);
+          updatePlayerStatus(false);
+        });
+    } else {
+      backgroundAudio.pause();
+      updatePlayerStatus(false);
+    }
+  });
+  
+  // Mute button
   muteBtn?.addEventListener('click', (e) => {
     createTouchAura(e);
     
-    console.log('Mute button clicked, current state:', { isMuted, audioStarted, audioPermissionGranted });
-    
     if (isMuted) {
-      backgroundAudio.volume = 0.2;
+      const volume = volumeSlider.value / 100;
+      backgroundAudio.volume = volume;
       muteBtn.textContent = '🔊';
       muteBtn.classList.remove('muted');
       muteBtn.title = 'Mute';
       isMuted = false;
-      console.log('Audio unmuted');
-      if (audioPermissionGranted && !audioStarted) {
-        console.log('Starting audio after unmute');
-        startAudio();
-      }
+      updateVolumeDisplay(volume);
     } else {
       backgroundAudio.volume = 0;
       muteBtn.textContent = '🔇';
       muteBtn.classList.add('muted');
       muteBtn.title = 'Unmute';
       isMuted = true;
-      console.log('Audio muted');
+      volumeText.textContent = '0%';
     }
   });
+  
+  // Volume slider
+  volumeSlider?.addEventListener('input', (e) => {
+    const volume = e.target.value / 100;
+    backgroundAudio.volume = volume;
+    updateVolumeDisplay(volume);
+    
+    // Auto-unmute if volume is increased
+    if (volume > 0 && isMuted) {
+      isMuted = false;
+      muteBtn.textContent = '🔊';
+      muteBtn.classList.remove('muted');
+      muteBtn.title = 'Mute';
+    }
+    
+    // Auto-mute if volume is set to 0
+    if (volume === 0 && !isMuted) {
+      isMuted = true;
+      muteBtn.textContent = '🔇';
+      muteBtn.classList.add('muted');
+      muteBtn.title = 'Unmute';
+    }
+  });
+  
+  // Audio event listeners
+  backgroundAudio.addEventListener('play', () => {
+    updatePlayerStatus(true);
+  });
+  
+  backgroundAudio.addEventListener('pause', () => {
+    updatePlayerStatus(false);
+  });
+  
+  backgroundAudio.addEventListener('ended', () => {
+    updatePlayerStatus(false);
+    statusText.textContent = 'Ended';
+  });
+  
+  backgroundAudio.addEventListener('loadstart', () => {
+    statusText.textContent = 'Loading...';
+  });
+  
+  backgroundAudio.addEventListener('canplay', () => {
+    if (!isPlaying) {
+      statusText.textContent = 'Ready';
+    }
+  });
+  
+  // Initialize volume display
+  updateVolumeDisplay(0.2);
   
   // Touch aura effect function
   function createTouchAura(event, isPurple = false) {
