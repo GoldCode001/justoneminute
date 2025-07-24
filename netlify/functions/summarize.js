@@ -321,7 +321,7 @@ exports.handler = async (event, context) => {
               'X-Title': 'Just One Minute'
             },
             body: JSON.stringify({
-              model: 'openai/gpt-4o-2024-11-20',
+              model: 'mistralai/mistral-small-3.2-24b-instruct',
               messages: [{ 
                 role: 'user', 
                 content: prompt
