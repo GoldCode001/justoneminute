@@ -416,96 +416,16 @@
   playPauseBtn?.addEventListener('click', (e) => {
     createTouchAura(e);
     
-    if (!audioPermissionGranted) {
-      // Show audio permission popup if not granted
-      createAudioPermissionPopup();
-      return;
-    }
-    
-    if (backgroundAudio.paused) {
-      backgroundAudio.play()
-        .then(() => {
-          console.log('Audio started from player');
-          audioStarted = true;
-          updatePlayerStatus(true);
-        })
-        .catch(err => {
-          console.error('Failed to play audio:', err);
-          updatePlayerStatus(false);
-        });
-    } else {
-      backgroundAudio.pause();
-      updatePlayerStatus(false);
-    }
   });
   
   // Mute button
   muteBtn?.addEventListener('click', (e) => {
     createTouchAura(e);
     
-    if (isMuted) {
-      const volume = volumeSlider.value / 100;
-      backgroundAudio.volume = volume;
-      muteBtn.textContent = '🔊';
-      muteBtn.classList.remove('muted');
-      muteBtn.title = 'Mute';
-      isMuted = false;
-      updateVolumeDisplay(volume);
-    } else {
-      backgroundAudio.volume = 0;
-      muteBtn.textContent = '🔇';
-      muteBtn.classList.add('muted');
-      muteBtn.title = 'Unmute';
-      isMuted = true;
-      volumeText.textContent = '0%';
-    }
   });
   
   // Volume slider
   volumeSlider?.addEventListener('input', (e) => {
-    const volume = e.target.value / 100;
-    backgroundAudio.volume = volume;
-    updateVolumeDisplay(volume);
-    
-    // Auto-unmute if volume is increased
-    if (volume > 0 && isMuted) {
-      isMuted = false;
-      muteBtn.textContent = '🔊';
-      muteBtn.classList.remove('muted');
-      muteBtn.title = 'Mute';
-    }
-    
-    // Auto-mute if volume is set to 0
-    if (volume === 0 && !isMuted) {
-      isMuted = true;
-      muteBtn.textContent = '🔇';
-      muteBtn.classList.add('muted');
-      muteBtn.title = 'Unmute';
-    }
-  });
-  
-  // Audio event listeners
-  backgroundAudio.addEventListener('play', () => {
-    updatePlayerStatus(true);
-  });
-  
-  backgroundAudio.addEventListener('pause', () => {
-    updatePlayerStatus(false);
-  });
-  
-  backgroundAudio.addEventListener('ended', () => {
-    updatePlayerStatus(false);
-    statusText.textContent = 'Ended';
-  });
-  
-  backgroundAudio.addEventListener('loadstart', () => {
-    statusText.textContent = 'Loading...';
-  });
-  
-  backgroundAudio.addEventListener('canplay', () => {
-    if (!isPlaying) {
-      statusText.textContent = 'Ready';
-    }
   });
   
   // Initialize volume display
