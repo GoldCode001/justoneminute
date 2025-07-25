@@ -117,12 +117,12 @@
     .mini-player {
       position: fixed;
       bottom: 20px;
-      left: 20px;
+      right: 20px;
       background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
       border: 2px solid #ffd700;
-      border-radius: 16px;
-      padding: 16px;
-      min-width: 280px;
+      border-radius: 12px;
+      padding: 8px 12px;
+      min-width: 180px;
       box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
       backdrop-filter: blur(10px);
       z-index: 999;
@@ -133,7 +133,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
     
     .song-info {
@@ -143,24 +143,24 @@
     .song-title {
       color: #ffd700;
       font-weight: 600;
-      font-size: 0.9em;
-      margin-bottom: 2px;
+      font-size: 0.75em;
+      margin-bottom: 1px;
     }
     
     .song-artist {
       color: #ccc;
-      font-size: 0.8em;
+      font-size: 0.65em;
     }
     
     .play-status {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
     
     .status-indicator {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: #666;
       transition: all 0.3s ease;
@@ -178,7 +178,7 @@
     
     .status-text {
       color: #888;
-      font-size: 0.75em;
+      font-size: 0.6em;
       transition: all 0.3s ease;
     }
     
@@ -189,16 +189,16 @@
     .player-controls {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
     }
     
     .control-btn {
       background: none;
       border: none;
-      font-size: 1.2em;
+      font-size: 1em;
       cursor: pointer;
-      padding: 4px;
-      border-radius: 6px;
+      padding: 2px;
+      border-radius: 4px;
       transition: all 0.2s ease;
     }
     
@@ -210,13 +210,13 @@
     .volume-container {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex: 1;
     }
     
     .volume-slider {
       flex: 1;
-      height: 4px;
+      height: 3px;
       background: #333;
       border-radius: 2px;
       outline: none;
@@ -226,16 +226,16 @@
     
     .volume-slider::-webkit-slider-thumb {
       appearance: none;
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #ffd700;
       cursor: pointer;
     }
     
     .volume-slider::-moz-range-thumb {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #ffd700;
       cursor: pointer;
@@ -244,8 +244,8 @@
     
     .volume-text {
       color: #ccc;
-      font-size: 0.75em;
-      min-width: 30px;
+      font-size: 0.6em;
+      min-width: 25px;
     }
     
     /* Footer */
