@@ -321,7 +321,7 @@ exports.handler = async (event, context) => {
               'X-Title': 'Just One Minute'
             },
             body: JSON.stringify({
-              model: 'mistralai/mistral-small-3.2-24b-instruct',
+              model: 'google/gemini-2.5-flash',
               messages: [{ 
                 role: 'user', 
                 content: prompt
