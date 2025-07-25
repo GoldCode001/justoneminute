@@ -248,6 +248,39 @@
       min-width: 25px;
     }
     
+    /* Input optimization styles */
+    .input-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+      margin-bottom: 8px;
+      font-size: 0.8em;
+    }
+    
+    .char-count {
+      color: #888;
+      font-size: 0.75em;
+    }
+    
+    .char-count.warning {
+      color: #ffa500;
+    }
+    
+    .char-count.danger {
+      color: #ff6b6b;
+    }
+    
+    .optimization-tip {
+      color: #ffd700;
+      font-size: 0.7em;
+      font-style: italic;
+    }
+    
+    .summarizer-section .optimization-tip {
+      color: #8b5cf6;
+    }
+    
     /* Footer */
     .footer {
       height: 50px;
@@ -752,6 +785,9 @@
         <div class="search-section">
           <div class="search-container">
             <input type="text" id="cryptoTerm" class="search-input" placeholder="Enter any crypto term (e.g., DeFi, NFT, staking...)" maxlength="100">
+            <div class="input-info">
+              <span class="char-count" id="cryptoCharCount">0/100</span>
+            </div>
             <button type="button" id="explainBtn" class="search-btn">Explain This</button>
           </div>
         </div>
@@ -768,7 +804,11 @@
     <div class="page-section summarizer-section" id="summarizerSection">
       <div class="container">
         <h1 class="summarize-title">...just one minute</h1>
-        <textarea id="rawText" placeholder="paste any long form text here" rows="4"></textarea>
+        <textarea id="rawText" placeholder="paste any long form text here (max 2000 chars for efficiency)" rows="4" maxlength="2000"></textarea>
+        <div class="input-info">
+          <span class="char-count" id="textCharCount">0/2000</span>
+          <span class="optimization-tip" id="optimizationTip"></span>
+        </div>
         <select id="length">
           <option value="1 line">1 line</option>
           <option value="3 sentences" selected>3 sentences</option>
