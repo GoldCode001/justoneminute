@@ -1171,11 +1171,32 @@
   // CRYPTO EXPLANATION FUNCTIONALITY
   // Only initialize if elements exist (dictionary page)
   const cryptoTermInput = document.getElementById('cryptoTerm');
+  const cryptoCharCount = document.getElementById('cryptoCharCount');
   const explainBtn = document.getElementById('explainBtn');
   const explainError = document.getElementById('explainError');
   const explainResponseContainer = document.getElementById('explainResponseContainer');
   const explainResponse = document.getElementById('explainResponse');
   const explainCopyBtn = document.getElementById('explainCopyBtn');
+  
+  // Character counting and optimization for crypto terms
+  if (cryptoTermInput && cryptoCharCount) {
+    cryptoTermInput.addEventListener('input', () => {
+      const length = cryptoTermInput.value.length;
+      const maxLength = 100;
+      
+      cryptoCharCount.textContent = `${length}/${maxLength}`;
+      
+      if (length > maxLength * 0.8) {
+        cryptoCharCount.classList.add('warning');
+        cryptoCharCount.classList.remove('danger');
+      } else if (length > maxLength * 0.95) {
+        cryptoCharCount.classList.add('danger');
+        cryptoCharCount.classList.remove('warning');
+      } else {
+        cryptoCharCount.classList.remove('warning', 'danger');
+      }
+    });
+  }
   
   // Enter key support for crypto term input
   if (cryptoTermInput && explainBtn) {
@@ -1293,6 +1314,8 @@
   // LONG-FORM SUMMARIZER FUNCTIONALITY
   // Only initialize if elements exist (summarizer page)
   const rawTextInput = document.getElementById('rawText');
+  const textCharCount = document.getElementById('textCharCount');
+  const optimizationTip = document.getElementById('optimizationTip');
   const lengthSelect = document.getElementById('length');
   const toneSelect = document.getElementById('tone');
   const summarizeBtn = document.getElementById('summarizeBtn');
@@ -1300,6 +1323,56 @@
   const summarizeResponseContainer = document.getElementById('summarizeResponseContainer');
   const summarizeResponse = document.getElementById('summarizeResponse');
   const summarizeCopyBtn = document.getElementById('summarizeCopyBtn');
+  
+  // Text optimization and character counting
+  if (rawTextInput && textCharCount && optimizationTip) {
+    rawTextInput.addEventListener('input', () => {
+      const text = rawTextInput.value;
+      const length = text.length;
+      const maxLength = 2000;
+      
+      textCharCount.textContent = `${length}/${maxLength}`;
+      
+      // Color coding for character count
+      if (length > maxLength * 0.8) {
+        textCharCount.classList.add('warning');
+        textCharCount.classList.remove('danger');
+      } else if (length > maxLength * 0.95) {
+        textCharCount.classList.add('danger');
+        textCharCount.classList.remove('warning');
+      } else {
+        textCharCount.classList.remove('warning', 'danger');
+      }
+      
+      // Optimization tips based on content
+      if (length > 1500) {
+        optimizationTip.textContent = '💡 Tip: Shorter text = faster response & lower cost';
+      } else if (length > 1000) {
+        optimizationTip.textContent = '💡 Consider using "1 line" for very long text';
+      } else if (length > 500) {
+        optimizationTip.textContent = '💡 Good length for detailed summaries';
+      } else if (length > 0) {
+        optimizationTip.textContent = '💡 Perfect size for quick processing';
+      } else {
+        optimizationTip.textContent = '';
+      }
+    });
+  }
+  
+  // Smart text preprocessing to optimize for AI
+  function optimizeTextForAI(text) {
+    return text
+      // Remove excessive whitespace
+      .replace(/\s+/g, ' ')
+      // Remove repeated punctuation
+      .replace(/[.]{3,}/g, '...')
+      .replace(/[!]{2,}/g, '!')
+      .replace(/[?]{2,}/g, '?')
+      // Remove excessive line breaks
+      .replace(/\n{3,}/g, '\n\n')
+      // Trim
+      .trim();
+  }
   
   if (summarizeBtn) {
     summarizeBtn.addEventListener('click', async (event) => {
@@ -1320,7 +1393,7 @@
     summarizeBtn.disabled = true;
     summarizeBtn.textContent = 'Summarizing...';
 
-    const rawText = rawTextInput instanceof HTMLTextAreaElement ? rawTextInput.value.trim() : '';
+    let rawText = rawTextInput instanceof HTMLTextAreaElement ? rawTextInput.value.trim() : '';
     const length = lengthSelect instanceof HTMLSelectElement ? lengthSelect.value : '';
     const tone = toneSelect instanceof HTMLSelectElement ? toneSelect.value : '';
 
@@ -1332,6 +1405,14 @@
       summarizeBtn.disabled = false;
       summarizeBtn.textContent = 'summarize';
       return;
+    }
+
+    // Optimize the text before sending to AI
+    rawText = optimizeTextForAI(rawText);
+    
+    // Additional truncation if still too long (safety net)
+    if (rawText.length > 2000) {
+      rawText = rawText.substring(0, 2000) + '...';
     }
 
     try {
