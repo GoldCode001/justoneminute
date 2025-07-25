@@ -326,7 +326,7 @@ exports.handler = async (event, context) => {
                 role: 'user', 
                 content: prompt
               }],
-              max_tokens: 180, // Shortened for more concise responses
+              max_tokens: 30, // Reduced to work within credit limits
               temperature: 0.6 // Slightly lower for more consistent output
             })
           });
