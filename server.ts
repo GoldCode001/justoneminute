@@ -338,7 +338,7 @@ Keep it comprehensive but digestible - aim for 2-4 paragraphs that really help s
               'X-Title': 'Goldman Crypto Dictionary'
             },
             body: JSON.stringify({
-              model: 'mistralai/mistral-small-3.2-24b-instruct',
+              model: 'deepseek/deepseek-chat-v3-0324',
               messages: [{ 
                 role: 'user', 
                 content: prompt
