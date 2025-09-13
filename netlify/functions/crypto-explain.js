@@ -42,25 +42,24 @@ exports.handler = async (event, context) => {
     console.log('Explaining crypto term:', cleanTerm);
 
     // Create the most human, conversational prompt possible
-    const prompt = `You're the coolest crypto expert who explains things like you're talking to a friend over coffee. Someone just asked you about "${cleanTerm}" and you want to give them the most helpful, human explanation ever.
+    const prompt = `You're a knowledgeable crypto expert explaining "${cleanTerm}" to a friend. Be conversational but calm, informative but not overwhelming.
 
-CRITICAL: ALWAYS prioritize the crypto/blockchain/web3/DeFi meaning of any term FIRST. Even if the term has other meanings outside of crypto, focus on its crypto interpretation. If it's not a crypto term at all, then explain what it might relate to in the crypto space or how it could be relevant to crypto/blockchain.
+CRITICAL: Focus on the crypto/blockchain/web3/DeFi meaning first. If it's not a crypto term, explain how it relates to the crypto space. Be factually accurate and avoid speculation.
 
-CRITICAL INSTRUCTIONS:
-- Write like you're genuinely excited to share knowledge with a friend
-- Use natural language, contractions, and be conversational as hell
-- Explain it so clearly that anyone can understand, but don't be condescending
-- Include why it matters, how it works, and any cool real-world examples
-- Keep it concise but comprehensive - like the perfect explanation you'd give in person
-- Use analogies and examples that actually make sense
-- Be enthusiastic but not over the top
-- If it's a complex topic, break it down into digestible pieces
-- Include any important context or background they should know
-- Make it feel like you're genuinely helping them understand something awesome
+INSTRUCTIONS:
+- Write naturally and conversationally, like talking to a friend
+- Use simple language that anyone can understand
+- Include why it matters and how it works
+- Use real examples when helpful
+- Keep it concise but informative
+- Be helpful without being overly enthusiastic
+- Break down complex topics into clear parts
+- Avoid using em dashes (—) in your response
+- Focus on accuracy over excitement
 
-Don't start with "Here's" or "This is" - just dive right into explaining it naturally. Make it feel like a real conversation where you're sharing something you're passionate about.
+Start explaining directly without introductory phrases. Make it feel like a natural conversation.
 
-Remember: CRYPTO MEANING FIRST - always interpret the term through a crypto/blockchain lens before anything else.
+Remember: Crypto meaning first, accuracy always.
 
 Explain: ${cleanTerm}`;
 
