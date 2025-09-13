@@ -804,7 +804,7 @@
     <div class="page-section summarizer-section" id="summarizerSection">
       <div class="container">
         <h1 class="summarize-title">...just one minute</h1>
-        <textarea id="rawText" placeholder="paste any long form text here (max 2000 chars for efficiency)" rows="4" maxlength="2000"></textarea>
+        <textarea id="rawText" placeholder="paste any long form text here (max 2000 chars - longer text will be truncated)" rows="4" maxlength="2000"></textarea>
         <div class="input-info">
           <span class="char-count" id="textCharCount">0/2000</span>
           <span class="optimization-tip" id="optimizationTip"></span>
@@ -1345,8 +1345,10 @@
       }
       
       // Optimization tips based on content
-      if (length > 1500) {
-        optimizationTip.textContent = '💡 Tip: Shorter text = faster response & lower cost';
+      if (length > 1800) {
+        optimizationTip.textContent = '💡 Warning: Text will be truncated at 2000 chars';
+      } else if (length > 1500) {
+        optimizationTip.textContent = '💡 Tip: Approaching limit - shorter text = better results';
       } else if (length > 1000) {
         optimizationTip.textContent = '💡 Consider using "1 line" for very long text';
       } else if (length > 500) {

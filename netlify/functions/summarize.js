@@ -289,8 +289,8 @@ exports.handler = async (event, context) => {
     }
 
     // Truncate very long text to prevent timeouts - more aggressive truncation
-    if (threadText.length > 1500) {
-      threadText = threadText.substring(0, 1500) + '...';
+    if (threadText.length > 2000) {
+      threadText = threadText.substring(0, 2000) + '...';
     }
 
     // NEW: Analyze the content before summarization
@@ -321,7 +321,7 @@ exports.handler = async (event, context) => {
               'X-Title': 'Just One Minute'
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
+              model: 'openai/gpt-4.1-mini',
               messages: [{ 
                 role: 'user', 
                 content: prompt
