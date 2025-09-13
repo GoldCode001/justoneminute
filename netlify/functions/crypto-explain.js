@@ -84,7 +84,7 @@ Explain: ${cleanTerm}`;
               'X-Title': 'Just One Minute - Crypto Dictionary'
             },
             body: JSON.stringify({
-              model: 'openai/gpt-4.1-mini',
+              model: 'openrouter/sonoma-sky-alpha',
               messages: [{ 
                 role: 'user', 
                 content: prompt
