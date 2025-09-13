@@ -84,7 +84,7 @@ Explain: ${cleanTerm}`;
               'X-Title': 'Just One Minute - Crypto Dictionary'
             },
             body: JSON.stringify({
-              model: 'openrouter/sonoma-sky-alpha',
+              model: 'deepseek/deepseek-chat-v3-0324',
               messages: [{ 
                 role: 'user', 
                 content: prompt
