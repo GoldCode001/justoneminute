@@ -839,77 +839,17 @@
   // Global click/touch aura effect - appears anywhere user clicks
   document.addEventListener('click', (e) => {
     // Don't create aura for specific interactive elements (they have their own)
-    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mini-player')) {
+    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn')) {
       createTouchAura(e);
     }
   });
   
   document.addEventListener('touchstart', (e) => {
     // Don't create aura for specific interactive elements (they have their own)
-    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn, .mini-player')) {
+    if (!e.target.closest('.orb, .search-btn, .summarize-btn, .copy-btn')) {
       createTouchAura(e);
     }
   });
-  
-  // Mini Player functionality
-  const miniPlayer = document.getElementById('miniPlayer');
-  const playPauseBtn = document.getElementById('playPauseBtn');
-  const muteBtn = document.getElementById('muteBtn');
-  const volumeSlider = document.getElementById('volumeSlider');
-  const volumeText = document.getElementById('volumeText');
-  const statusIndicator = document.getElementById('statusIndicator');
-  const statusText = document.getElementById('statusText');
-  const songTitle = document.getElementById('songTitle');
-  const songArtist = document.getElementById('songArtist');
-  
-  let isMuted = false;
-  let isPlaying = false;
-  
-  // Update player status
-  function updatePlayerStatus(playing) {
-    isPlaying = playing;
-    
-    if (playing) {
-      playPauseBtn.innerHTML = '⏸️';
-      playPauseBtn.title = 'Pause';
-      statusIndicator.classList.add('playing');
-      statusText.textContent = 'Playing';
-      statusText.classList.add('playing');
-    } else {
-      playPauseBtn.innerHTML = '▶️';
-      playPauseBtn.title = 'Play';
-      statusIndicator.classList.remove('playing');
-      statusText.textContent = 'Paused';
-      statusText.classList.remove('playing');
-    }
-  }
-  
-  // Update volume display
-  function updateVolumeDisplay(volume) {
-    const percentage = Math.round(volume * 100);
-    volumeText.textContent = `${percentage}%`;
-    volumeSlider.value = percentage;
-    volumeSlider.style.setProperty('--volume-percent', `${percentage}%`);
-  }
-  
-  // Play/Pause button
-  playPauseBtn?.addEventListener('click', (e) => {
-    createTouchAura(e);
-    
-  });
-  
-  // Mute button
-  muteBtn?.addEventListener('click', (e) => {
-    createTouchAura(e);
-    
-  });
-  
-  // Volume slider
-  volumeSlider?.addEventListener('input', (e) => {
-  });
-  
-  // Initialize volume display
-  updateVolumeDisplay(0.2);
   
   // Touch aura effect function
   function createTouchAura(event, isPurple = false) {

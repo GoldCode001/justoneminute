@@ -272,39 +272,71 @@ function ensureCompleteSentence(text) {
   const endsWithPunctuation = /[.!?]$/.test(cleanText);
   
   if (endsWithPunctuation) {
-    return cleanText; // Already complete
+    // Even if it ends with punctuation, check if the last sentence makes sense
+    const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const lastSentence = sentences[sentences.length - 1];
+    
+    // Check if the last sentence has at least a subject and predicate (basic completeness)
+    if (lastSentence && lastSentence.trim().split(/\s+/).length >= 3) {
+      return cleanText; // Sentence seems complete
+    }
   }
   
-  // More aggressive approach to ensure meaningful completion
-  // First, try to find the last complete sentence
-  const sentenceMatch = cleanText.match(/(.*[.!?])/);
-  if (sentenceMatch) {
-    return sentenceMatch[1];
+  // Split into sentences and analyze each one
+  const sentences = cleanText.split(/([.!?]+)/).filter(s => s.trim().length > 0);
+  let completeText = '';
+  
+  // Rebuild text with only complete sentences
+  for (let i = 0; i < sentences.length - 1; i += 2) {
+    const sentence = sentences[i];
+    const punctuation = sentences[i + 1];
+    
+    if (sentence && sentence.trim().length > 0 && punctuation && /[.!?]/.test(punctuation)) {
+      const words = sentence.trim().split(/\s+/);
+      
+      // Check if sentence has minimum structure (at least 4 words for meaningful content)
+      if (words.length >= 4) {
+        // Check for basic sentence structure indicators
+        const hasSubject = words.some(word => /^[A-Z]/.test(word) || /\b(it|this|that|they|we|you|I|he|she)\b/i.test(word));
+        const hasVerb = words.some(word => /\b(is|are|was|were|has|have|had|will|would|can|could|do|does|did|get|got|make|made|take|took|go|went|come|came|see|saw|know|knew|think|thought|say|said|tell|told|give|gave|find|found|use|used|work|worked|help|helped|show|showed|mean|means|allow|allows|enable|enables|provide|provides)\b/i.test(word));
+        
+        if (hasSubject && hasVerb) {
+          completeText += sentence + punctuation;
+        } else if (completeText.length === 0 && words.length >= 6) {
+          // If it's the first sentence and reasonably long, include it anyway
+          completeText += sentence + punctuation;
+        }
+      }
+    }
   }
   
-  // If no complete sentences, look for natural breaking points
-  const words = cleanText.split(/\s+/);
-  
-  // If it's very short, just add a period
-  if (words.length <= 5) {
-    return cleanText + '.';
+  // If we have complete sentences, return them
+  if (completeText.trim().length > 20) {
+    return completeText.trim();
   }
   
-  // Look for natural stopping points (conjunctions, prepositions, etc.)
-  const stopWords = ['and', 'but', 'or', 'so', 'because', 'since', 'while', 'when', 'where', 'which', 'that', 'with', 'for', 'in', 'on', 'at', 'by', 'from', 'to'];
+  // If no complete sentences found, try to salvage what we can
+  const words = cleanText.replace(/[.!?]+$/, '').split(/\s+/);
+  
+  // Look for natural breaking points (avoid cutting mid-phrase)
+  const breakWords = ['and', 'but', 'or', 'so', 'because', 'since', 'while', 'when', 'where', 'which', 'that'];
   
   // Work backwards to find a good stopping point
-  for (let i = Math.max(0, words.length - 5); i < words.length; i++) {
-    if (stopWords.includes(words[i].toLowerCase())) {
-      // Stop before the conjunction/preposition for a more natural ending
+  for (let i = words.length - 1; i >= Math.max(4, words.length - 8); i--) {
+    if (breakWords.includes(words[i].toLowerCase())) {
       const truncated = words.slice(0, i).join(' ');
-      if (truncated.length > 20) { // Make sure we have enough content
+      if (truncated.split(/\s+/).length >= 4) {
         return truncated + '.';
       }
     }
   }
   
-  // If no good stopping point found, remove the last few words and add period
-  const truncated = words.slice(0, -2).join(' ');
-  return truncated.length > 20 ? truncated + '.' : cleanText + '.';
+  // Last resort: take most of the content but ensure it's not cut off mid-word
+  if (words.length > 6) {
+    const safeTruncated = words.slice(0, -3).join(' ');
+    return safeTruncated + '.';
+  }
+  
+  // If all else fails, return original with period
+  return cleanText.replace(/[.!?]*$/, '') + '.';
 }

@@ -547,42 +547,64 @@ function ensureCompleteSentence(text) {
   const endsWithPunctuation = /[.!?]$/.test(cleanText);
   
   if (endsWithPunctuation) {
-    return cleanText; // Already complete
-  }
-  
-  // Find the last complete sentence
-  const sentences = cleanText.split(/([.!?]+)/);
-  let completeText = '';
-  
-  // Work backwards to find the last complete sentence
-  for (let i = 0; i < sentences.length - 1; i += 2) {
-    const sentence = sentences[i];
-    const punctuation = sentences[i + 1];
+    // Even if it ends with punctuation, verify the last sentence is complete
+    const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const lastSentence = sentences[sentences.length - 1];
     
+    // Check if the last sentence has sufficient structure
+    if (lastSentence && lastSentence.trim().split(/\s+/).length >= 3) {
+      return cleanText; // Sentence appears complete
+    }
+      // Ensure sentence has meaningful length and structure
+      if (words.length >= 4) {
+        // Look for basic sentence components
+        const hasSubject = words.some(word => 
+          /^[A-Z]/.test(word) || 
+          /\b(it|this|that|these|those|they|we|you|I|he|she|the|a|an)\b/i.test(word)
+        );
+        const hasVerb = words.some(word => 
+          /\b(is|are|was|were|has|have|had|will|would|can|could|should|might|must|do|does|did|get|got|make|made|take|took|go|went|come|came|see|saw|know|knew|think|thought|say|said|tell|told|give|gave|find|found|use|used|work|worked|help|helped|show|showed|mean|means|allow|allows|enable|enables|provide|provides|include|includes|contain|contains|involve|involves|require|requires|offer|offers|support|supports)\b/i.test(word)
+        );
+  
+        // Include sentence if it has basic structure or is reasonably substantial
+        if ((hasSubject && hasVerb) || words.length >= 6) {
+  for (let i = 0; i < sentenceParts.length - 1; i += 2) {
     if (sentence && sentence.trim().length > 0 && punctuation && /[.!?]/.test(punctuation)) {
-      completeText += sentence + punctuation;
+      const words = sentence.trim().split(/\s+/);
     }
   }
   
-  if (completeText.trim().length === 0) {
-    // If no complete sentences found, add a period to the original text
-    // but remove any trailing incomplete words first
-    const words = cleanText.trim().split(/\s+/);
-    if (words.length > 3) {
-      // Remove the last word if it might be incomplete
-      const truncatedText = words.slice(0, -1).join(' ');
-      return truncatedText + '.';
-    }
-    
-    // Add period if it doesn't end with punctuation
-    if (!/[.!?]$/.test(cleanText)) {
-      cleanText += '.';
-    }
-    
-    return cleanText;
+  // If we found complete sentences, return them
+  if (completeText.trim().length > 15) {
+    return completeText.trim();
   }
   
-  return completeText;
+  // If no complete sentences, try to create one from the available text
+  const words = cleanText.replace(/[.!?]*$/, '').split(/\s+/);
+  
+  if (words.length <= 3) {
+    // Very short text, just add period
+    return cleanText.replace(/[.!?]*$/, '') + '.';
+  }
+  
+  // Look for natural breaking points to avoid cutting mid-thought
+  const breakWords = ['and', 'but', 'or', 'so', 'because', 'since', 'while', 'when', 'where', 'which', 'that', 'with', 'for', 'in', 'on', 'at', 'by', 'from', 'to'];
+  
+  // Work backwards from the end to find a good stopping point
+  for (let i = words.length - 1; i >= Math.max(3, words.length - 6); i--) {
+    if (breakWords.includes(words[i].toLowerCase())) {
+      const truncated = words.slice(0, i).join(' ');
+      if (truncated.split(/\s+/).length >= 3) {
+        return truncated + '.';
+      }
+    }
+  }
+  
+  // If no good break point, remove last few words to avoid incomplete thoughts
+    if (safeTruncated.split(/\s+/).length >= 3) {
+      return safeTruncated + '.';
+  // Last resort: return original with proper punctuation
+  return cleanText.replace(/[.!?]*$/, '') + '.';
 }
 
 // UPDATED: Enhanced prompt generation with content analysis
