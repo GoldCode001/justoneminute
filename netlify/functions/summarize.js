@@ -555,6 +555,20 @@ function ensureCompleteSentence(text) {
     if (lastSentence && lastSentence.trim().split(/\s+/).length >= 3) {
       return cleanText; // Sentence appears complete
     }
+  }
+  
+  // If we get here, we need to fix the sentence ending
+  // Split by sentence punctuation and rebuild complete sentences
+  const sentenceParts = cleanText.split(/([.!?]+)/);
+  let completeText = '';
+  
+  for (let i = 0; i < sentenceParts.length - 1; i += 2) {
+    const sentence = sentenceParts[i];
+    const punctuation = sentenceParts[i + 1];
+    
+    if (sentence && sentence.trim().length > 0 && punctuation && /[.!?]/.test(punctuation)) {
+      const words = sentence.trim().split(/\s+/);
+      
       // Ensure sentence has meaningful length and structure
       if (words.length >= 4) {
         // Look for basic sentence components
@@ -565,12 +579,12 @@ function ensureCompleteSentence(text) {
         const hasVerb = words.some(word => 
           /\b(is|are|was|were|has|have|had|will|would|can|could|should|might|must|do|does|did|get|got|make|made|take|took|go|went|come|came|see|saw|know|knew|think|thought|say|said|tell|told|give|gave|find|found|use|used|work|worked|help|helped|show|showed|mean|means|allow|allows|enable|enables|provide|provides|include|includes|contain|contains|involve|involves|require|requires|offer|offers|support|supports)\b/i.test(word)
         );
-  
+
         // Include sentence if it has basic structure or is reasonably substantial
         if ((hasSubject && hasVerb) || words.length >= 6) {
-  for (let i = 0; i < sentenceParts.length - 1; i += 2) {
-    if (sentence && sentence.trim().length > 0 && punctuation && /[.!?]/.test(punctuation)) {
-      const words = sentence.trim().split(/\s+/);
+          completeText += sentence.trim() + punctuation;
+        }
+      }
     }
   }
   
@@ -601,8 +615,11 @@ function ensureCompleteSentence(text) {
   }
   
   // If no good break point, remove last few words to avoid incomplete thoughts
-    if (safeTruncated.split(/\s+/).length >= 3) {
-      return safeTruncated + '.';
+  const safeTruncated = words.slice(0, Math.max(3, words.length - 3)).join(' ');
+  if (safeTruncated.split(/\s+/).length >= 3) {
+    return safeTruncated + '.';
+  }
+  
   // Last resort: return original with proper punctuation
   return cleanText.replace(/[.!?]*$/, '') + '.';
 }
